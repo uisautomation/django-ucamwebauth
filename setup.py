@@ -5,6 +5,6 @@
 from distutils.core import setup
 
 setup(name='pyroven',
-      version='1.0',
+      version='0.9',
       packages=['pyroven'],
       )
