@@ -23,7 +23,7 @@ The login page should redirect users to Raven:
     def raven_login(request):
         # Ensure we're properly configured
         configure()
-        # Get the raven object and return a redirect to the raven server
+        # Get the Raven object and return a redirect to the Raven server
         r = Raven()
         return r.get_login_redirect()
 
@@ -35,7 +35,7 @@ When the user has authenticated with Raven, the Raven server will redirect them 
         # Ensure we're properly configured
         configure()
 
-        # Get the token which the raven server sent us - this should really
+        # Get the token which the Raven server sent us - this should really
         # have a try/except around it to catch KeyError
         token = request.GET['WLS-Response']
         # See if this is a valid token
