@@ -349,4 +349,4 @@ class RavenConfig(object):
 
         # Read any certificates from the files
         for (name,filename) in self.pubkeys.iteritems():
-            self.pubkeys[name] = crypto.load_cert(cryto.FILETYPE_PEM, file(filename).read())
+            self.pubkeys[name] = crypto.load_certificate(crypto.FILETYPE_PEM, file(filename).read())
