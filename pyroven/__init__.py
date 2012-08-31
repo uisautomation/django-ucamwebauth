@@ -251,7 +251,8 @@ class RavenResponse(object):
         try:
             crypto.verify(cert, self.sig, data, 'sha1')
         except Exception, e:
-            print "Signature Verification failed: %s" %(e)
+            raise InvalidResponseError("The signature for this "
+                                        "response is not valid.")
 
     def validate(self):
         """Returns True if this represents a successful authentication;
