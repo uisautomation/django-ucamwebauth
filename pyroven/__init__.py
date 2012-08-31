@@ -243,24 +243,15 @@ class RavenResponse(object):
                                          "corresponding to the key the server "
                                          "signed the response with")
 
-        # Get the public key
-        key = cert.get_pubkey()
-        #key = key.get_rsa()
-        #log(key)
-
-        # Find the SHA-1 hash of the main part of the response
+        # Create data string used for hash
+        # http://raven.cam.ac.uk/project/waa2wls-protocol.txt
         data = '!'.join(tokens[0:11])
-        sha1 = hashlib.sha1()
-        sha1.update(data)
-        hashed = sha1.digest()
-        log(hexlify(hashed))
-        log(data)
         
         # Check that it matches
         try:
-            crypto.verify(cert, self.sig, hashed, 'sha1')
-        except Exception, err:
-            log(err)
+            crypto.verify(cert, self.sig, data, 'sha1')
+        except Exception, e:
+            print "Signature Verification failed: %s" %(e)
 
     def validate(self):
         """Returns True if this represents a successful authentication;
