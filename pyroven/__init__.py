@@ -1,29 +1,12 @@
-#   Copyright 2011 Andrew Ryrie (amr66)
-
-"""Python-based authentication for the University of Cambridge's UCam-WebAuth
-service, aka Raven."""
-
+"""Base configuration for Raven logins
+"""
 import calendar, time
 import ast
 import hashlib
 import urllib
-from binascii import hexlify
-from string import maketrans
-from base64 import b64decode
 from ConfigParser import RawConfigParser, NoSectionError, NoOptionError
 
-from OpenSSL import crypto
-
-def log(msg):
-    pass
-#    print msg
-
-def parse_time(t):
-    """Converts a time of the form '20110729T123456Z' to a number of seconds
-    since the epoch.
-    @exception ValueError if the time is not a valid Raven time"""
-    time_struct = time.strptime(t, "%Y%m%dT%H%M%SZ")
-    return calendar.timegm(time_struct)
+from pyroven.utils import decode_sig
 
 class MalformedResponseError(Exception):
     """Raised if a response from the raven server is malformed."""
@@ -39,64 +22,24 @@ class PublicKeyNotFoundError(Exception):
     the public part of"""
     pass
 
-def decode_sig(sig):
-    """Decodes a signature from the variant base64 used by raven.
-    @param sig  A string giving the signature in Raven's variant base-64
-    @return  A binary string containing the signature"""
-    table = maketrans("-._", "+/=")
-    sig = str(sig).translate(table)
-    try:
-        return b64decode(sig)
-    except TypeError:
-        raise MalformedResponseError("Signature is not a valid base-64 encoded "
-                                     "string")
-
 class RavenResponse(object):
     """Represents a response from the raven server.  Contains fields for
     version number, status, etc. and methods for checking the validity of the
     response via the RSA signature."""
 
-    """@brief the protocol version number"""
     ver = None
-
-    """@brief the status code for the response"""
     status = None
-
-    """@brief any message that came with the response"""
     msg = None
-
-    """@brief the date and time the response was issued"""
     issue = None
-
-    """@brief an identifier of this response, unique when combined with issue"""
     ident = None
-
-    """@brief the url this response should be being returned to"""
     url = None
-
-    """@brief the user's username / CRSid"""
     principal = None
-
-    """@brief the way authentication was establilshed (password, card, etc.)"""
     auth = None
-
-    """@brief the way auth was previously established, if it wasn't this time"""
     sso = None
-
-    """@brief time left on the user's raven session"""
     life = None
-
-    """@brief params any parameters passed to the raven login"""
     params = None
-
-    """@brief the id number of the key used to sign the response"""
     kid = None
-
-    """@brief the signature of the response"""
     sig = None
-
-
-    """@brief the configuration used to set up the raven authentication"""
     config = None
 
     STATUS = {200:'Successful authentication',
@@ -258,87 +201,3 @@ class RavenResponse(object):
         """Returns True if this represents a successful authentication;
         otherwise returns False."""
         return self.status == 200
-
-
-class RavenConfig(object):
-    """Represents a raven configuration."""
-
-    """@brief the login url of the raven server"""
-    login_url = "https://raven.cam.ac.uk/auth/authenticate.html"
-
-    """@brief the logout url of the raven server"""
-    logout_url = "https://raven.cam.ac.uk/auth/logout.html"
-
-    """@brief the url on this server to return to from raven"""
-    return_url = None
-
-    """@brief the version of the protocol to use"""
-    ver = 2
-
-    """@brief the maximum difference between the local and remote clocks to
-    tolerate, in seconds, including network delay"""
-    max_clock_skew = 2
-
-    """@brief the time before an issued response expires, in seconds"""
-    timeout = 10
-
-    """@brief a list of acceptable authentication methods to use (pwd, card)"""
-    aauth = ['pwd', 'card']
-
-    """@brief whether the authentication is required to be interactive"""
-    iact = False
-
-    """@brief a list of public key files to accept from the server"""
-    pubkeys = {}
-
-    def _set_from_config(self, attrs, cfg, section):
-        """Does magic to take a list of strings specifying attributes, read
-        their values from the config file, and set the members of that name to
-        the read value."""
-        
-        # Go through all the attributes we have to set
-        for attr in attrs:
-            try:
-                val = cfg.get(section, attr)
-            except NoSectionError:
-                # There's no such section, no point continuing as we'll just
-                # keep getting this error
-                return
-            except NoOptionError:
-                # There's no such option, go to the next attribute
-                continue
-            else:
-
-                # If possible, evaluate the value as a python literal
-                try:
-                    val = ast.literal_eval(val)
-                except ValueError:
-                    # Not a python literal - just use the string
-                    pass
-                setattr(self, attr, val)
-
-    def __init__(self, filename):
-        """Constructor.  Reads a configuration in ini format from the given file
-        and initialises the config with it."""
-        cfg = RawConfigParser()
-        cfg.read(filename)
-
-        """@brief the name of the main section in the config file"""
-        section = "raven"
-        
-        # See if we can get any of the attributes from the config file
-        self._set_from_config(['login_url',
-                               'logout_url',
-                               'return_url',
-                               'ver',
-                               'max_clock_skew',
-                               'timeout',
-                               'aauth',
-                               'iact',
-                               'pubkeys'],
-                              cfg,
-                              section)
-
-        # Read any certificates from the files
-        for (name,filename) in self.pubkeys.iteritems():
-            self.pubkeys[name] = crypto.load_certificate(crypto.FILETYPE_PEM, file(filename).read())

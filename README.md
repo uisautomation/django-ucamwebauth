@@ -75,3 +75,13 @@ login_url = "https://demo.raven.cam.ac.uk/auth/authenticate.html"
 logout_url = "https://demo.raven.cam.ac.uk/auth/logout.html"
 return_url = "http://your.server.cam.ac.uk/ravenreturn/"
 pubkeys = {'901':'/path/to/pubkey901.crt'}
+
+## Settings
+
+To set up Pyroven, you need to install the app, and then setup the following variables within your settings.py of the Django application:
+
+PYROVEN_LOGIN_URL = ''
+PYROVEN_LOGOUT_URL = ''
+PYROVEN_RETURN_URL = ''
+
+The certificate for the Raven authentication (required for verification), should be loaded into the environment variables of the app.
