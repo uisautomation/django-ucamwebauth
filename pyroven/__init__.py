@@ -4,9 +4,10 @@ import calendar, time
 import ast
 import hashlib
 import urllib
-from ConfigParser import RawConfigParser, NoSectionError, NoOptionError
 
-from pyroven.utils import decode_sig
+from OpenSSL import crypto
+
+from pyroven.utils import decode_sig, setting
 
 class MalformedResponseError(Exception):
     """Raised if a response from the raven server is malformed."""
@@ -55,11 +56,20 @@ class RavenResponse(object):
         """Makes a Ravenresponse object from a reponse string passed with
         HTTP GET.
         @param reponse_str The response string, normally passed as
-        GET['WLS-Response']"""
+        GET['WLS-Response']
+        """
         log("RavenResponse constructor")
 
-        self.config = config
-        
+        PYROVEN_RETURN_URL = setting(PYROVEN_RETURN_URL)
+        PYROVEN_LOGIN_URL = setting(PYROVEN_LOGIN_URL)
+        PYROVEN_LOGOUT_URL = setting(PYROVEN_LOGOUT_URL)
+        PYROVEN_VER = setting(PYROVEN_VERSION, 2)
+        PYROVEN_MAX_CLOCK_SKEW = setting(PYROVEN_MAX_CLOCK_SKEW, 2)
+        PYROVEN_TIMEOUT = setting(PYROVEN_TIMEOUT, 10)
+        PYROVEN_AAUTH = setting(PYROVEN_AAUTH, ['pwd', 'card'])
+        PYROVEN_IACT = setting(PYROVEN_IACT, False)
+        PYROVEN_CERTS = setting(PYROVEN_CERTS)
+
         # The response is a !-separated list of variables, so split it by !
         tokens = response_str.split('!')
 
@@ -70,7 +80,7 @@ class RavenResponse(object):
             log("Version is not integer")
             raise MalformedResponseError("Version number must be integer")
             
-        if self.ver != self.config.ver:
+        if self.ver != PYROVEN_VER:
             log("Version number doesn't match config")
             raise MalformedResponseError("Version number does not match that "
                                          "in the configuration")
@@ -118,18 +128,17 @@ class RavenResponse(object):
         self.sig = decode_sig(tokens[12])
         
         # Check that the URL is as expected
-        if self.url != self.config.return_url:
+        if self.url != PYROVEN_RETURN_URL:
             log("URL does not match")
             raise InvalidResponseError("The URL in the response does not match "
                                        "the URL expected")
 
         # Check that the issue time is not in the future or too far in the past:
-        if self.issue > time.time() + self.config.max_clock_skew:
+        if self.issue > time.time() + PYROVEN_MAX_CLOCK_SKEW:
             log("Timestamp in future")
             raise InvalidResponseError("The timestamp on the response is in "
                                        "the future")
-        if self.issue < time.time() - self.config.max_clock_skew - self.config.timeout:
-            
+        if self.issue < time.time() - PYROVEN_MAX_CLOCK_SKEW - PYROVEN_TIMEOUT: 
             log("Response has timed out - issued %s, now %s" % (time.asctime(time.gmtime(self.issue)),
                                                                 time.asctime()))
             raise InvalidResponseError("The response has timed out")
@@ -138,22 +147,22 @@ class RavenResponse(object):
         log ("Checking authentication types")
         if self.auth != "":
             # Authentication was done recently with this auth type
-            if self.config.aauth != None:
-                # if self.config.aauth == None, any type of authentication is
+            if PYROVEN_AAUTH != None:
+                # if PYROVEN_AAUTH == None, any type of authentication is
                 # acceptable
-                if self.auth not in self.config.aauth:
+                if self.auth not in PYROVEN_AAUTH:
                     log("Wrong type of auth")
                     raise InvalidResponseError("The reponse used the wrong "
                                                "type of authentication")
-        elif self.sso != "" and not self.config.iact:
+        elif self.sso != "" and not PYROVEN_IACT:
             # Authentication was not done recently, and that is acceptable to us
-            if self.config.aauth != None:
+            if PYROVEN_IACT != None:
                 
                 # Get the list of auth types used on previous occasions and
                 # check that at least one of them is acceptable to us
                 auth_good = False
                 for auth_type in self.sso.split(','):
-                    if auth_type in self.config.aauth:
+                    if auth_type in PYROVEN_AAUTH:
                         auth_good = True
                         break
 
@@ -164,7 +173,7 @@ class RavenResponse(object):
                     raise InvalidResponseError("The response used the wrong "
                                                "type of authentication")
         else:
-            if self.config.iact:
+            if PYROVEN_IACT:
                 # We had required an interactive authentication, but didn't get
                 # one
                 log("Interactive authentication required")
@@ -179,7 +188,7 @@ class RavenResponse(object):
         # Check that the signature is correct - first get the certificate
         log("Checking signature")
         try:
-            cert = self.config.pubkeys[self.kid]
+            cert = crypto.load_certificate(crypto.FILENAME_PEM, PYROVEN_CERTS[self.kid])
         except KeyError:
             log("unknown public key")
             raise PublicKeyNotFoundError("We do not have the public key "
