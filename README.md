@@ -1,6 +1,16 @@
 # Introduction
 
-pyroven is a library which provides [Raven authentication](http://raven.cam.ac.uk/) for [Django](https://www.djangoproject.com/). It provides a Django authentication backend which can be added to `AUTHENTICATION_BACKENDS` in the Django `settings` module:
+pyroven is a library which provides [Raven authentication](http://raven.cam.ac.uk/) for [Django](https://www.djangoproject.com/). It provides a Django authentication backend which can be added to `AUTHENTICATION_BACKENDS` in the Django `settings` module.
+
+## Use
+
+Install django-pyroven using pip:
+
+```bash
+pip install django-pyroven
+```
+
+Then you can enable it within your Django project's settings.py:
 
 ```python
 AUTHENTICATION_BACKENDS = (
@@ -13,12 +23,23 @@ This allows both normal Django login and Raven login.
 
 ## Minimum Config Settings
 
-To set up Pyroven, you need to install the app, and then setup the following variables within your settings.py of the Django application:
+You then need to configure the app's settings. Raven has a live and test environments, the URL and certificate details are given below.
+
+There are four minimum config settings:
 
 ```python
-RAVEN_LOGIN_URL = ''
-RAVEN_LOGOUT_URL = ''
-RAVEN_RETURN_URL = ''
+PYROVEN_LOGIN_URL - a string representing the URL for the Raven login redirect.
+PYROVEN_LOGOUT_URL - a string representing the logout URL for Raven
+PYROVEN_RETURN_URL - the URL of your app which the Raven service should return the user to after authentication
+PYROVEN_CERTS - a dictionary including key names and their associated certificates which can be downloaded from the Raven project pages.
+```
+
+An example, referencing the Raven test environment is given below:
+
+```python
+RAVEN_LOGIN_URL = 'https://demo.raven.cam.ac.uk/auth/authenticate.html'
+RAVEN_LOGOUT_URL = 'https://demo.raven.cam.ac.uk/auth/logout.html'
+RAVEN_RETURN_URL = 'http://your.example.com/raven_return/'
 PYROVEN_CERTS = {'901': """-----BEGIN CERTIFICATE-----
 MIIDzTCCAzagAwIBAgIBADANBgkqhkiG9w0BAQQFADCBpjELMAkGA1UEBhMCR0Ix
 EDAOBgNVBAgTB0VuZ2xhbmQxEjAQBgNVBAcTCUNhbWJyaWRnZTEgMB4GA1UEChMX
@@ -45,11 +66,9 @@ wOq24EIbX5LquL9w+uvnfXw=
 """)
 ```
 
-The certificate for the Raven authentication (required for verification), should be loaded into the environment variables of the app.
-
 ## Additional Config Settings
 
-Extra settings which can be used to fine tune the performance of Django-Pyroven include:
+Extra settings which can be used to fine tune the performance of Django-Pyroven include. The details of these can be found in the Raven WLS protocol documentation, [here](http://raven.cam.ac.uk/project/waa2wls-protocol.txt).
 
 ```python
 PYROVEN_MAX_CLOCK_SKEW = ''
