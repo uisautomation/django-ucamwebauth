@@ -1,6 +1,10 @@
+import time
+import calendar
+
 from string import maketrans
 from base64 import b64decode
 
+from django.conf import settings
 from django.http import HttpResponseRedirect
 
 def decode_sig(sig):
@@ -18,6 +22,13 @@ def decode_sig(sig):
 def setting(name, default=None):
     """Returns a setting from the Django settings file"""
     return getattr(settings, name, default)
+
+def parse_time(t):
+    """Converts a time of the form '20110729T123456Z' to a number of seconds
+    since the epoch.
+    @exception ValueError if the time is not a valid Raven time"""
+    time_struct = time.strptime(t, "%Y%m%dT%H%M%SZ")
+    return calendar.timegm(time_struct)
 
 class HttpResponseSeeOther(HttpResponseRedirect):
     status_code = 303

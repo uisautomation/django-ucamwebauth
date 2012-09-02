@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 
 from pyroven import (MalformedResponseError, InvalidResponseError, 
-                     RavenConfig, PublicKeyNotFoundError)
+                     RavenResponse, PublicKeyNotFoundError)
 
 class HttpResponseSeeOther(HttpResponseRedirect):
     """An HttpResponse with a 303 status code, since django doesn't provide one
@@ -20,7 +20,7 @@ class HttpResponseSeeOther(HttpResponseRedirect):
 
 class RavenAuthBackend(object):
     """An authentication backend for django that uses Raven.  To use, add
-    'pyroven.pyroven_django.RavenAuthBackend' to AUTHENTICATION_BACKENDS 
+    'pyroven.backends.RavenAuthBackend' to AUTHENTICATION_BACKENDS 
     in your django settings.py."""
 
     def authenticate(self, response_str=None):
@@ -35,7 +35,7 @@ class RavenAuthBackend(object):
 
         # Check that everything is correct, and return
         try:
-            response.validate():
+            response.validate()
         except MalformedResponseError:
             print("Got a malformed response from the Raven server")
             # If the response was malformed, we're not allowed to login
@@ -50,7 +50,7 @@ class RavenAuthBackend(object):
             traceback.print_exc()
             return None
 
-        username = response.principal       
+        username = response.principal
  
         if username is None:
             return None

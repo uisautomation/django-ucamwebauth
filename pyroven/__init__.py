@@ -5,9 +5,9 @@ import ast
 import hashlib
 import urllib
 
-from OpenSSL import crypto
+from OpenSSL.crypto import FILETYPE_PEM, load_certificate, verify
 
-from pyroven.utils import decode_sig, setting
+from pyroven.utils import decode_sig, setting, parse_time
 
 class MalformedResponseError(Exception):
     """Raised if a response from the raven server is malformed."""
@@ -52,23 +52,21 @@ class RavenResponse(object):
               560:'WAA not authorised to use this WLS',
               570:'Authentication declined'}
 
-    def __init__(self, response_str, config):
+    def __init__(self, response_str):
         """Makes a Ravenresponse object from a reponse string passed with
         HTTP GET.
         @param reponse_str The response string, normally passed as
         GET['WLS-Response']
         """
-        log("RavenResponse constructor")
-
-        PYROVEN_RETURN_URL = setting(PYROVEN_RETURN_URL)
-        PYROVEN_LOGIN_URL = setting(PYROVEN_LOGIN_URL)
-        PYROVEN_LOGOUT_URL = setting(PYROVEN_LOGOUT_URL)
-        PYROVEN_VER = setting(PYROVEN_VERSION, 2)
-        PYROVEN_MAX_CLOCK_SKEW = setting(PYROVEN_MAX_CLOCK_SKEW, 2)
-        PYROVEN_TIMEOUT = setting(PYROVEN_TIMEOUT, 10)
-        PYROVEN_AAUTH = setting(PYROVEN_AAUTH, ['pwd', 'card'])
-        PYROVEN_IACT = setting(PYROVEN_IACT, False)
-        PYROVEN_CERTS = setting(PYROVEN_CERTS)
+        PYROVEN_RETURN_URL = setting('PYROVEN_RETURN_URL')
+        PYROVEN_LOGIN_URL = setting('PYROVEN_LOGIN_URL')
+        PYROVEN_LOGOUT_URL = setting('PYROVEN_LOGOUT_URL')
+        PYROVEN_VER = setting('PYROVEN_VERSION', 2)
+        PYROVEN_MAX_CLOCK_SKEW = setting('PYROVEN_MAX_CLOCK_SKEW', 2)
+        PYROVEN_TIMEOUT = setting('PYROVEN_TIMEOUT', 10)
+        PYROVEN_AAUTH = setting('PYROVEN_AAUTH', ['pwd', 'card'])
+        PYROVEN_IACT = setting('PYROVEN_IACT', False)
+        PYROVEN_CERTS = setting('PYROVEN_CERTS')
 
         # The response is a !-separated list of variables, so split it by !
         tokens = response_str.split('!')
@@ -77,20 +75,20 @@ class RavenResponse(object):
         try:
             self.ver = int(tokens[0])
         except ValueError:
-            log("Version is not integer")
+            print("Version is not integer")
             raise MalformedResponseError("Version number must be integer")
             
         if self.ver != PYROVEN_VER:
-            log("Version number doesn't match config")
+            print("Version number doesn't match config")
             raise MalformedResponseError("Version number does not match that "
                                          "in the configuration")
 
         if self.ver < 1 or self.ver > 2:
-            log("Version number not supported")
+            print("Version number not supported")
             raise MalformedResponseError("Unsupported version: %d" % self.ver)
 
         if len(tokens) != 13:
-            log("wrong number params in response")
+            print("wrong number params in response")
             raise MalformedResponseError("Wrong number of parameters in "
                                          "response: expected 13, got %d"
                                          % len(tokens))
@@ -99,14 +97,14 @@ class RavenResponse(object):
         try:
             self.status = int(tokens[1])
         except ValueError:
-            log("status code must be integer")
+            print("status code must be integer")
             raise MalformedResponseError("Status code must be an integer, not "
                                           "%s" % tokens[1])
         self.msg = tokens[2]
         try:
             self.issue = parse_time(tokens[3])
         except ValueError:
-            log("Issue time is not a valid raven time")
+            print("Issue time is not a valid raven time")
             raise MalformedResponseError("Issue time is not a valid Raven "
                                           "time, not %s" % tokens[3])
         self.ident = tokens[4]
@@ -120,7 +118,7 @@ class RavenResponse(object):
             try:
                 self.life = int(tokens[9])
             except ValueError:
-                log ("lifetime is not an integer")
+                print("lifetime is not an integer")
                 raise MalformedResponseError("Life must be an integer, not %s"
                                              % tokens[9])
         self.params = tokens[10]
@@ -129,29 +127,29 @@ class RavenResponse(object):
         
         # Check that the URL is as expected
         if self.url != PYROVEN_RETURN_URL:
-            log("URL does not match")
+            print("URL does not match")
             raise InvalidResponseError("The URL in the response does not match "
                                        "the URL expected")
 
         # Check that the issue time is not in the future or too far in the past:
         if self.issue > time.time() + PYROVEN_MAX_CLOCK_SKEW:
-            log("Timestamp in future")
+            print("Timestamp in future")
             raise InvalidResponseError("The timestamp on the response is in "
                                        "the future")
         if self.issue < time.time() - PYROVEN_MAX_CLOCK_SKEW - PYROVEN_TIMEOUT: 
-            log("Response has timed out - issued %s, now %s" % (time.asctime(time.gmtime(self.issue)),
+            print("Response has timed out - issued %s, now %s" % (time.asctime(time.gmtime(self.issue)),
                                                                 time.asctime()))
             raise InvalidResponseError("The response has timed out")
 
         # Check that the type of authentication was acceptable
-        log ("Checking authentication types")
+        print("Checking authentication types")
         if self.auth != "":
             # Authentication was done recently with this auth type
             if PYROVEN_AAUTH != None:
                 # if PYROVEN_AAUTH == None, any type of authentication is
                 # acceptable
                 if self.auth not in PYROVEN_AAUTH:
-                    log("Wrong type of auth")
+                    print("Wrong type of auth")
                     raise InvalidResponseError("The reponse used the wrong "
                                                "type of authentication")
         elif self.sso != "" and not PYROVEN_IACT:
@@ -169,28 +167,28 @@ class RavenResponse(object):
                 # If none of the previous types match one we asked for, raise an
                 # error
                 if not auth_good:
-                    log("Wrong type of auth")
+                    print("Wrong type of auth")
                     raise InvalidResponseError("The response used the wrong "
                                                "type of authentication")
         else:
             if PYROVEN_IACT:
                 # We had required an interactive authentication, but didn't get
                 # one
-                log("Interactive authentication required")
+                print("Interactive authentication required")
                 raise InvalidResponseError("Interactive authentication "
                                            "required but not received")
             else:
                 # Both auth and sso are empty, which is not allowed
-                log("no authentication types supplied")
+                print("no authentication types supplied")
                 raise MalformedResponseError("No authentication types supplied")
         # Done checking the authentication type was acceptable
 
         # Check that the signature is correct - first get the certificate
-        log("Checking signature")
+        print("Checking signature")
         try:
-            cert = crypto.load_certificate(crypto.FILENAME_PEM, PYROVEN_CERTS[self.kid])
+            cert = load_certificate(FILETYPE_PEM, PYROVEN_CERTS[self.kid])
         except KeyError:
-            log("unknown public key")
+            print("unknown public key")
             raise PublicKeyNotFoundError("We do not have the public key "
                                          "corresponding to the key the server "
                                          "signed the response with")
@@ -201,7 +199,7 @@ class RavenResponse(object):
         
         # Check that it matches
         try:
-            crypto.verify(cert, self.sig, data, 'sha1')
+            verify(cert, self.sig, data, 'sha1')
         except Exception, e:
             raise InvalidResponseError("The signature for this "
                                         "response is not valid.")
