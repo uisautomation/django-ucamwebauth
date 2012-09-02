@@ -1,6 +1,6 @@
 # Introduction
 
-pyroven is a library which provides [Raven authentication](http://raven.cam.ac.uk/) for [Django](https://www.djangoproject.com/). It provides a Django authentication backend which can be added to `AUTHENTICATION_BACKENDS` in the Django `settings` module.
+pyroven is a library which provides use of Cambridge University's [Raven authentication](http://raven.cam.ac.uk/) for [Django](https://www.djangoproject.com/). It provides a Django authentication backend which can be added to `AUTHENTICATION_BACKENDS` in the Django `settings` module.
 
 ## Use
 
@@ -28,18 +28,20 @@ You then need to configure the app's settings. Raven has a live and test environ
 There are four minimum config settings:
 
 ```python
-PYROVEN_LOGIN_URL - a string representing the URL for the Raven login redirect.
-PYROVEN_LOGOUT_URL - a string representing the logout URL for Raven
-PYROVEN_RETURN_URL - the URL of your app which the Raven service should return the user to after authentication
-PYROVEN_CERTS - a dictionary including key names and their associated certificates which can be downloaded from the Raven project pages.
+PYROVEN_LOGIN_URL: a string representing the URL for the Raven login redirect.
+PYROVEN_LOGOUT_URL: a string representing the logout URL for Raven
+PYROVEN_RETURN_URL: the URL of your app which the Raven service should 
+    return the user to after authentication
+PYROVEN_CERTS: a dictionary including key names and their associated 
+    certificates which can be downloaded from the Raven project pages.
 ```
 
 An example, referencing the Raven test environment is given below:
 
 ```python
-RAVEN_LOGIN_URL = 'https://demo.raven.cam.ac.uk/auth/authenticate.html'
-RAVEN_LOGOUT_URL = 'https://demo.raven.cam.ac.uk/auth/logout.html'
-RAVEN_RETURN_URL = 'http://your.example.com/raven_return/'
+PYROVEN_LOGIN_URL = 'https://demo.raven.cam.ac.uk/auth/authenticate.html'
+PYROVEN_LOGOUT_URL = 'https://demo.raven.cam.ac.uk/auth/logout.html'
+PYROVEN_RETURN_URL = 'http://your.example.com/raven_return/'
 PYROVEN_CERTS = {'901': """-----BEGIN CERTIFICATE-----
 MIIDzTCCAzagAwIBAgIBADANBgkqhkiG9w0BAQQFADCBpjELMAkGA1UEBhMCR0Ix
 EDAOBgNVBAgTB0VuZ2xhbmQxEjAQBgNVBAcTCUNhbWJyaWRnZTEgMB4GA1UEChMX
