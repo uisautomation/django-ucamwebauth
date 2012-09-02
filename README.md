@@ -1,77 +1,78 @@
 # Introduction
 
-pyroven is a library which provides [Raven authentication](http://raven.cam.ac.uk/) for [Django](https://www.djangoproject.com/). It provides a Django authentication backend which can be added to `AUTHENTICATION_BACKENDS` in the Django `settings` module:
+pyroven is a library which provides [Raven authentication](http://raven.cam.ac.uk/) for [Django](https://www.djangoproject.com/). It provides a Django authentication backend which can be added to `AUTHENTICATION_BACKENDS` in the Django `settings` module.
 
-````python
+## Use
+
+Install django-pyroven using pip:
+
+```bash
+pip install django-pyroven
+```
+
+Then you can enable it within your Django project's settings.py:
+
+```python
 AUTHENTICATION_BACKENDS = (
-    'pyroven.pyroven_django.RavenAuthBackend',
+    'pyroven.backends.RavenAuthBackend',
     'django.contrib.auth.backends.ModelBackend'
 )
-````
+```
 
 This allows both normal Django login and Raven login.
 
-Anything using pyroven should make sure that the configuration is loaded; this is done by setting the config variable in the Raven singleton class:
+## Minimum Config Settings
 
-````python
-from pyroven import RavenConfig
-from pyroven.pyroven_django import Raven
-def configure():
-    r = Raven()
-    if r.config is None:
-        r.config = RavenConfig("raven.ini")
-````
+You then need to configure the app's settings. Raven has a live and test environments, the URL and certificate details are given below.
 
-The login page should redirect users to Raven:
+There are four minimum config settings:
 
-````python
-def raven_login(request):
-    # Ensure we're properly configured
-    configure()
-    # Get the Raven object and return a redirect to the Raven server
-    r = Raven()
-    return r.get_login_redirect()
-````
+```python
+PYROVEN_LOGIN_URL - a string representing the URL for the Raven login redirect.
+PYROVEN_LOGOUT_URL - a string representing the logout URL for Raven
+PYROVEN_RETURN_URL - the URL of your app which the Raven service should return the user to after authentication
+PYROVEN_CERTS - a dictionary including key names and their associated certificates which can be downloaded from the Raven project pages.
+```
 
-When the user has authenticated with Raven, the Raven server will redirect them back to your site (the exact URL is specified in the `.ini` file above). The return page should call the Django `authenticate` and `login` functions with a token received from the Raven server via HTTP GET:
+An example, referencing the Raven test environment is given below:
 
-````python
-from django.contrib.auth import authenticate, login
+```python
+RAVEN_LOGIN_URL = 'https://demo.raven.cam.ac.uk/auth/authenticate.html'
+RAVEN_LOGOUT_URL = 'https://demo.raven.cam.ac.uk/auth/logout.html'
+RAVEN_RETURN_URL = 'http://your.example.com/raven_return/'
+PYROVEN_CERTS = {'901': """-----BEGIN CERTIFICATE-----
+MIIDzTCCAzagAwIBAgIBADANBgkqhkiG9w0BAQQFADCBpjELMAkGA1UEBhMCR0Ix
+EDAOBgNVBAgTB0VuZ2xhbmQxEjAQBgNVBAcTCUNhbWJyaWRnZTEgMB4GA1UEChMX
+VW5pdmVyc2l0eSBvZiBDYW1icmlkZ2UxLTArBgNVBAsTJENvbXB1dGluZyBTZXJ2
+aWNlIERFTU8gUmF2ZW4gU2VydmljZTEgMB4GA1UEAxMXUmF2ZW4gREVNTyBwdWJs
+aWMga2V5IDEwHhcNMDUwNzI2MTMyMTIwWhcNMDUwODI1MTMyMTIwWjCBpjELMAkG
+A1UEBhMCR0IxEDAOBgNVBAgTB0VuZ2xhbmQxEjAQBgNVBAcTCUNhbWJyaWRnZTEg
+MB4GA1UEChMXVW5pdmVyc2l0eSBvZiBDYW1icmlkZ2UxLTArBgNVBAsTJENvbXB1
+dGluZyBTZXJ2aWNlIERFTU8gUmF2ZW4gU2VydmljZTEgMB4GA1UEAxMXUmF2ZW4g
+REVNTyBwdWJsaWMga2V5IDEwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBALhF
+i9tIZvjYQQRfOzP3cy5ujR91ZntQnQehldByHlchHRmXwA1ot/e1WlHPgIjYkFRW
+lSNcSDM5r7BkFu69zM66IHcF80NIopBp+3FYqi5uglEDlpzFrd+vYllzw7lBzUnp
+CrwTxyO5JBaWnFMZrQkSdspXv89VQUO4V4QjXV7/AgMBAAGjggEHMIIBAzAdBgNV
+HQ4EFgQUgjC6WtA4jFf54kxlidhFi8w+0HkwgdMGA1UdIwSByzCByIAUgjC6WtA4
+jFf54kxlidhFi8w+0HmhgaykgakwgaYxCzAJBgNVBAYTAkdCMRAwDgYDVQQIEwdF
+bmdsYW5kMRIwEAYDVQQHEwlDYW1icmlkZ2UxIDAeBgNVBAoTF1VuaXZlcnNpdHkg
+b2YgQ2FtYnJpZGdlMS0wKwYDVQQLEyRDb21wdXRpbmcgU2VydmljZSBERU1PIFJh
+dmVuIFNlcnZpY2UxIDAeBgNVBAMTF1JhdmVuIERFTU8gcHVibGljIGtleSAxggEA
+MAwGA1UdEwQFMAMBAf8wDQYJKoZIhvcNAQEEBQADgYEAsdyB+9szctHHIHE+S2Kg
+LSxbGuFG9yfPFIqaSntlYMxKKB5ba/tIAMzyAOHxdEM5hi1DXRsOok3ElWjOw9oN
+6Psvk/hLUN+YfC1saaUs3oh+OTfD7I4gRTbXPgsd6JgJQ0TQtuGygJdaht9cRBHW
+wOq24EIbX5LquL9w+uvnfXw=
+-----END CERTIFICATE-----
+""")
+```
 
-def raven_return(request):
-    # Ensure we're properly configured
-    configure()
+## Additional Config Settings
 
-    # Get the token which the Raven server sent us - this should really
-    # have a try/except around it to catch KeyError
-    token = request.GET['WLS-Response']
-    # See if this is a valid token
-    user = authenticate(response_str=token)
-    if user is None:
-        # Some sort of err
-    else:
-        login(request, user)
-    # Redirect somewhere sensible
-    return HttpResponseRedirect('/')
-````
+Extra settings which can be used to fine tune the performance of Django-Pyroven include. The details of these can be found in the Raven WLS protocol documentation, [here](http://raven.cam.ac.uk/project/waa2wls-protocol.txt).
 
-The `.ini` file which the Raven settings are loaded from has the following format:
-
-````ini
-[raven]
-login_url = "http://raven.cam.ac.uk/auth/authenticate.html"
-logout_url = "http://raven.cam.ac.uk/auth/logout.html"
-return_url = "http://your.server.cam.ac.uk/ravenreturn/"
-pubkeys = {'2':'/path/to/pubkey2.crt'}
-````
-
-The Raven service also offers a test server for authenticating accounts whilst testing implementations of Raven authentication. Test accounts use the usernames test0001 to test0500, with the password 'test' used throughout. The keys and certificates for this server can be retrieved from [Demonstration Server Keys](https://raven.cam.ac.uk/project/keys/demo_server/).
-
-The relevant ini settings to use this are:
-
-````ini
-[raven]
-login_url = "https://demo.raven.cam.ac.uk/auth/authenticate.html"
-logout_url = "https://demo.raven.cam.ac.uk/auth/logout.html"
-return_url = "http://your.server.cam.ac.uk/ravenreturn/"
-pubkeys = {'901':'/path/to/pubkey901.crt'}
+```python
+PYROVEN_MAX_CLOCK_SKEW = ''
+PYROVEN_TIMEOUT = ''
+PYROVEN_IACT = ''
+PYROVEN_AAUTH = ''
+```
