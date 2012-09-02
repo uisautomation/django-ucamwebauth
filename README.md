@@ -21,6 +21,16 @@ AUTHENTICATION_BACKENDS = (
 
 This allows both normal Django login and Raven login.
 
+You should then enable the URLs for pyroven:
+
+````python
+urlpatterns = patterns('',
+    ...
+    url(r'', include('pyroven.urls')),
+    ...
+)
+````
+
 ## Minimum Config Settings
 
 You then need to configure the app's settings. Raven has a live and test environments, the URL and certificate details are given below.
