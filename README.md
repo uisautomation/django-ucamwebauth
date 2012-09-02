@@ -65,3 +65,13 @@ return_url = "http://your.server.cam.ac.uk/ravenreturn/"
 pubkeys = {'2':'/path/to/pubkey2.crt'}
 ````
 
+The Raven service also offers a test server for authenticating accounts whilst testing implementations of Raven authentication. Test accounts use the usernames test0001 to test0500, with the password 'test' used throughout. The keys and certificates for this server can be retrieved from [Demonstration Server Keys](https://raven.cam.ac.uk/project/keys/demo_server/).
+
+The relevant ini settings to use this are:
+
+````ini
+[raven]
+login_url = "https://demo.raven.cam.ac.uk/auth/authenticate.html"
+logout_url = "https://demo.raven.cam.ac.uk/auth/logout.html"
+return_url = "http://your.server.cam.ac.uk/ravenreturn/"
+pubkeys = {'901':'/path/to/pubkey901.crt'}

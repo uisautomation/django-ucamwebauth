@@ -12,7 +12,7 @@ from string import maketrans
 from base64 import b64decode
 from ConfigParser import RawConfigParser, NoSectionError, NoOptionError
 
-from M2Crypto import X509
+from OpenSSL import crypto
 
 def log(msg):
     pass
@@ -243,25 +243,16 @@ class RavenResponse(object):
                                          "corresponding to the key the server "
                                          "signed the response with")
 
-        # Get the public key
-        key = cert.get_pubkey()
-        key = key.get_rsa()
-        log(key)
-
-        # Find the SHA-1 hash of the main part of the response
+        # Create data string used for hash
+        # http://raven.cam.ac.uk/project/waa2wls-protocol.txt
         data = '!'.join(tokens[0:11])
-        sha1 = hashlib.sha1()
-        sha1.update(data)
-        hashed = sha1.digest()
-        log(hexlify(hashed))
-        log(data)
         
         # Check that it matches
-        ret = key.verify(hashed, self.sig)
-        if ret != 1:
-            log("invalid signature")
-            raise InvalidResponseError("The signature for this response is not "
-                                       "valid")
+        try:
+            crypto.verify(cert, self.sig, data, 'sha1')
+        except Exception, e:
+            raise InvalidResponseError("The signature for this "
+                                        "response is not valid.")
 
     def validate(self):
         """Returns True if this represents a successful authentication;
@@ -350,4 +341,4 @@ class RavenConfig(object):
 
         # Read any certificates from the files
         for (name,filename) in self.pubkeys.iteritems():
-            self.pubkeys[name] = X509.load_cert(filename, X509.FORMAT_PEM)
+            self.pubkeys[name] = crypto.load_certificate(crypto.FILETYPE_PEM, file(filename).read())
