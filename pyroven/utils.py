@@ -1,5 +1,4 @@
 import time
-import calendar
 
 from string import maketrans
 from base64 import b64decode
@@ -23,12 +22,11 @@ def setting(name, default=None):
     """Returns a setting from the Django settings file"""
     return getattr(settings, name, default)
 
-def parse_time(t):
+def parse_time(time_string):
     """Converts a time of the form '20110729T123456Z' to a number of seconds
     since the epoch.
     @exception ValueError if the time is not a valid Raven time"""
-    time_struct = time.strptime(t, "%Y%m%dT%H%M%SZ")
-    return calendar.timegm(time_struct)
+    return time.mktime(time.strptime(time_string, "%Y%m%dT%H%M%SZ"))
 
 class HttpResponseSeeOther(HttpResponseRedirect):
     status_code = 303
