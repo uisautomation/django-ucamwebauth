@@ -46,6 +46,14 @@ PYROVEN_CERTS: a dictionary including key names and their associated
     certificates which can be downloaded from the Raven project pages.
 ```
 
+The final major setting is:
+
+```python
+PYROVEN_CREATE_USER = False
+```
+
+This defaults to False, but when True, allows the autocreation of users who have been successfully authenticated by Raven, but do not exist in the local database. The user is created with set_unusable_password().
+
 An example, referencing the Raven test environment is given below:
 
 ```python
@@ -80,7 +88,7 @@ wOq24EIbX5LquL9w+uvnfXw=
 
 ## Additional Config Settings
 
-Extra settings which can be used to fine tune the performance of Django-Pyroven include. The details of these can be found in the Raven WLS protocol documentation, [here](http://raven.cam.ac.uk/project/waa2wls-protocol.txt).
+Extra settings which can be used to fine tune the performance of django-pyroven include: 
 
 ```python
 PYROVEN_MAX_CLOCK_SKEW = ''
@@ -88,3 +96,5 @@ PYROVEN_TIMEOUT = ''
 PYROVEN_IACT = ''
 PYROVEN_AAUTH = ''
 ```
+
+The details of these can be found in the Raven WLS protocol documentation, [here](http://raven.cam.ac.uk/project/waa2wls-protocol.txt).
