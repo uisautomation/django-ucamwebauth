@@ -1,4 +1,5 @@
 import time
+import calendar
 
 from string import maketrans
 from base64 import b64decode
@@ -26,7 +27,7 @@ def parse_time(time_string):
     """Converts a time of the form '20110729T123456Z' to a number of seconds
     since the epoch.
     @exception ValueError if the time is not a valid Raven time"""
-    return time.mktime(time.strptime(time_string, "%Y%m%dT%H%M%SZ"))
+    return calendar.timegm(time.strptime(time_string, "%Y%m%dT%H%M%SZ"))
 
 class HttpResponseSeeOther(HttpResponseRedirect):
     status_code = 303

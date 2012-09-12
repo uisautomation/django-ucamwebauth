@@ -55,7 +55,7 @@ cbvAhow217X9V0dVerEOKxnNYspXRrh36h7k4mQA+sDq
 """
 
 def create_wls_response(raven_ver='2', raven_status='200', raven_msg='',
-                        raven_issue=datetime.now().strftime('%Y%m%dT%H%M%SZ'),
+                        raven_issue=datetime.utcnow().strftime('%Y%m%dT%H%M%SZ'),
                         raven_id='1347296083-8278-2', 
                         raven_url='http%3A%2F%2Fwww.example.org%2Fraven_return%2F',
                         raven_principal=RAVEN_TEST_USER, raven_auth='pwd', 
@@ -129,7 +129,7 @@ class RavenTestCase(TestCase):
         with self.assertRaises(InvalidResponseError) as excep:
             response = self.client.get(reverse('raven_return'), 
                                        {'WLS-Response': create_wls_response(
-                                        raven_issue=(datetime.now() + 
+                                        raven_issue=(datetime.utcnow() + 
                                         timedelta(hours=1))
                                         .strftime('%Y%m%dT%H%M%SZ'))})
         
@@ -143,7 +143,7 @@ class RavenTestCase(TestCase):
         with self.assertRaises(InvalidResponseError) as excep:
             response = self.client.get(reverse('raven_return'), 
                                        {'WLS-Response': create_wls_response(
-                                        raven_issue=(datetime.now() + 
+                                        raven_issue=(datetime.utcnow() + 
                                         timedelta(hours=-1))
                                         .strftime('%Y%m%dT%H%M%SZ'))})
 
