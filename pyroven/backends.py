@@ -13,6 +13,8 @@ from django.http import HttpResponseRedirect
 from pyroven import (MalformedResponseError, InvalidResponseError, 
                      RavenResponse, PublicKeyNotFoundError)
 
+from pyroven.utils import setting
+
 class HttpResponseSeeOther(HttpResponseRedirect):
     """An HttpResponse with a 303 status code, since django doesn't provide one
     by default.  A 303 is required by the the WAA2WLS specification."""
@@ -65,6 +67,16 @@ class RavenAuthBackend(object):
         except User.DoesNotExist:
             print("Successfully authenticated as %s in Raven, but that user "
                   "does not exist in Django" % username)
+
+            if setting('PYROVEN_CREATE_USER', default=False) == True:
+                print("Creating user for %s" % username)
+                user = User(username=username)
+                user.set_unusable_password()
+                user.save()
+                return user
+            else:
+                print("User %s not created" % username)
+            
             return None
         else:
             print("%s successfully authenticated via Raven" % username)
