@@ -2,6 +2,7 @@ import urllib
 
 from django.http import HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
+from django.shortcuts import redirect
 
 from pyroven.utils import setting, HttpResponseSeeOther
 
@@ -31,3 +32,4 @@ def raven_login(request):
 
 def raven_logout(request):
     logout(request)
+    return redirect('/')
