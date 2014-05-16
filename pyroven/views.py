@@ -32,4 +32,4 @@ def raven_login(request):
 
 def raven_logout(request):
     logout(request)
-    return redirect('/')
+    return redirect(setting('PYROVEN_LOGOUT_REDIRECT', '/'))

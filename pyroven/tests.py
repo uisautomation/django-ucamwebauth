@@ -187,3 +187,15 @@ class RavenTestCase(TestCase):
             user = User.objects.get(username=RAVEN_NEW_USER)
             
             self.assertFalse(user.has_usable_password())
+
+    def test_logout_redirect_url(self):
+        """Tests the logout redirection"""
+        response = self.client.get(reverse('raven_return'), 
+                        {'WLS-Response': create_wls_response()})
+        self.assertIn('_auth_user_id', self.client.session)
+        with self.settings(PYROVEN_LOGOUT_REDIRECT = 'http://www.cam.ac.uk/'):
+            response = self.client.get(reverse('raven_logout'), follow=True)
+            self.assertEqual('http://www.cam.ac.uk/', response.redirect_chain[0][0])
+            self.assertEqual(302, response.redirect_chain[0][1])
+
+

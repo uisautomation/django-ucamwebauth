@@ -39,10 +39,11 @@ There are four minimum config settings:
 
 ```python
 PYROVEN_LOGIN_URL: a string representing the URL for the Raven login redirect.
-PYROVEN_LOGOUT_URL: a string representing the logout URL for Raven
-PYROVEN_RETURN_URL: the URL of your app which the Raven service should 
-    return the user to after authentication
-PYROVEN_CERTS: a dictionary including key names and their associated 
+PYROVEN_LOGOUT_URL: a string representing the logout URL for Raven.
+PYROVEN_RETURN_URL: the URL of your app which the Raven service should
+    return the user to after authentication.
+PYROVEN_LOGOUT_REDIRECT: a string representing the URL to where the user is redirected when she logs out of the app.
+PYROVEN_CERTS: a dictionary including key names and their associated
     certificates which can be downloaded from the Raven project pages.
 ```
 
@@ -60,6 +61,7 @@ An example, referencing the Raven test environment is given below:
 PYROVEN_LOGIN_URL = 'https://demo.raven.cam.ac.uk/auth/authenticate.html'
 PYROVEN_LOGOUT_URL = 'https://demo.raven.cam.ac.uk/auth/logout.html'
 PYROVEN_RETURN_URL = 'http://your.example.com/raven_return/'
+PYROVEN_LOGOUT_REDIRECT = 'http://www.cam.ac.uk/'
 PYROVEN_CERTS = {'901': """-----BEGIN CERTIFICATE-----
 MIIDzTCCAzagAwIBAgIBADANBgkqhkiG9w0BAQQFADCBpjELMAkGA1UEBhMCR0Ix
 EDAOBgNVBAgTB0VuZ2xhbmQxEjAQBgNVBAcTCUNhbWJyaWRnZTEgMB4GA1UEChMX

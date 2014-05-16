@@ -61,6 +61,7 @@ class RavenResponse(object):
         PYROVEN_RETURN_URL = setting('PYROVEN_RETURN_URL')
         PYROVEN_LOGIN_URL = setting('PYROVEN_LOGIN_URL')
         PYROVEN_LOGOUT_URL = setting('PYROVEN_LOGOUT_URL')
+        PYROVEN_LOGOUT_REDIRECT = setting('PYROVEN_LOGOUT_REDIRECT', '/')
         PYROVEN_VER = setting('PYROVEN_VERSION', 2)
         PYROVEN_MAX_CLOCK_SKEW = setting('PYROVEN_MAX_CLOCK_SKEW', 2)
         PYROVEN_TIMEOUT = setting('PYROVEN_TIMEOUT', 10)
