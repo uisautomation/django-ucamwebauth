@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/abrahammartin/pyroven.svg?branch=master)](https://travis-ci.org/abrahammartin/pyroven)
+
 # Introduction
 
 pyroven is a library which provides use of Cambridge University's [Raven authentication](http://raven.cam.ac.uk/) for [Django](https://www.djangoproject.com/). It provides a Django authentication backend which can be added to `AUTHENTICATION_BACKENDS` in the Django `settings` module.
