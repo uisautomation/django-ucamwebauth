@@ -35,6 +35,7 @@ class RavenResponse(object):
     ident = None
     url = None
     principal = None
+    ptags = None
     auth = None
     sso = None
     life = None
@@ -59,10 +60,7 @@ class RavenResponse(object):
         GET['WLS-Response']
         """
         PYROVEN_RETURN_URL = setting('PYROVEN_RETURN_URL')
-        PYROVEN_LOGIN_URL = setting('PYROVEN_LOGIN_URL')
-        PYROVEN_LOGOUT_URL = setting('PYROVEN_LOGOUT_URL')
-        PYROVEN_LOGOUT_REDIRECT = setting('PYROVEN_LOGOUT_REDIRECT', '/')
-        PYROVEN_VER = setting('PYROVEN_VERSION', 2)
+        PYROVEN_VER = setting('PYROVEN_VERSION', 3)
         PYROVEN_MAX_CLOCK_SKEW = setting('PYROVEN_MAX_CLOCK_SKEW', 2)
         PYROVEN_TIMEOUT = setting('PYROVEN_TIMEOUT', 10)
         PYROVEN_AAUTH = setting('PYROVEN_AAUTH', ['pwd', 'card'])
@@ -84,14 +82,14 @@ class RavenResponse(object):
             raise MalformedResponseError("Version number does not match that "
                                          "in the configuration")
 
-        if self.ver < 1 or self.ver > 2:
+        if self.ver != 3:
             print("Version number not supported")
             raise MalformedResponseError("Unsupported version: %d" % self.ver)
 
-        if len(tokens) != 13:
+        if len(tokens) != 14:
             print("wrong number params in response")
             raise MalformedResponseError("Wrong number of parameters in "
-                                         "response: expected 13, got %d"
+                                         "response: expected 14, got %d"
                                          % len(tokens))
         
         # Get all the tokens from the request
@@ -111,20 +109,21 @@ class RavenResponse(object):
         self.ident = tokens[4]
         self.url = urllib.unquote(tokens[5])
         self.principal = tokens[6]
-        self.auth = tokens[7]
-        self.sso = tokens[8]
-        if tokens[9] == "":
+        self.ptags = tokens[7].split(',')
+        self.auth = tokens[8]
+        self.sso = tokens[9]
+        if tokens[10] == "":
             self.life = None
         else:
             try:
-                self.life = int(tokens[9])
+                self.life = int(tokens[10])
             except ValueError:
                 print("lifetime is not an integer")
                 raise MalformedResponseError("Life must be an integer, not %s"
-                                             % tokens[9])
-        self.params = tokens[10]
-        self.kid = tokens[11]
-        self.sig = decode_sig(tokens[12])
+                                             % tokens[10])
+        self.params = tokens[11]
+        self.kid = tokens[12]
+        self.sig = decode_sig(tokens[13])
         
         # Check that the URL is as expected
         if self.url != PYROVEN_RETURN_URL:
@@ -195,8 +194,8 @@ class RavenResponse(object):
                                          "signed the response with")
 
         # Create data string used for hash
-        # http://raven.cam.ac.uk/project/waa2wls-protocol.txt
-        data = '!'.join(tokens[0:11])
+        # http://raven.cam.ac.uk/project/waa2wls-protocol-3.0.txt
+        data = '!'.join(tokens[0:12])
         
         # Check that it matches
         try:

@@ -52,6 +52,9 @@ class RavenAuthBackend(object):
             traceback.print_exc()
             return None
 
+        if (setting('PYROVEN_NOT_CURRENT', default=False) == False) and ('current' not in response.ptags):
+            return None
+
         username = response.principal
  
         if username is None:

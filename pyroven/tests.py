@@ -54,13 +54,13 @@ cbvAhow217X9V0dVerEOKxnNYspXRrh36h7k4mQA+sDq
 -----END RSA PRIVATE KEY-----
 """
 
-def create_wls_response(raven_ver='2', raven_status='200', raven_msg='',
+def create_wls_response(raven_ver='3', raven_status='200', raven_msg='',
                         raven_issue=datetime.utcnow().strftime('%Y%m%dT%H%M%SZ'),
                         raven_id='1347296083-8278-2', 
                         raven_url='http%3A%2F%2Fwww.example.org%2Fraven_return%2F',
-                        raven_principal=RAVEN_TEST_USER, raven_auth='pwd', 
-                        raven_sso='', raven_life='36000', raven_params='', 
-                        raven_kid='901',
+                        raven_principal=RAVEN_TEST_USER, raven_ptags='current',
+                        raven_auth='pwd', raven_sso='', raven_life='36000',
+                        raven_params='', raven_kid='901',
                         raven_key_pem=GOOD_PRIV_KEY_PEM):
     """Creates a valid WLS Response as the Raven test server would 
     using keys from https://raven.cam.ac.uk/project/keys/demo_server/
@@ -70,11 +70,11 @@ def create_wls_response(raven_ver='2', raven_status='200', raven_msg='',
 
     # This is the data which is signed by Raven with their private key
     # Note data consists of full payload with exception of kid and sig
-    # source: http://raven.cam.ac.uk/project/waa2wls-protocol.txt
+    # source: http://raven.cam.ac.uk/project/waa2wls-protocol-3.0.txt
     wls_response_data = [raven_ver, raven_status, raven_msg, 
                          raven_issue, raven_id, raven_url, 
-                         raven_principal, raven_auth, raven_sso, 
-                         raven_life, raven_params]
+                         raven_principal, raven_ptags, raven_auth,
+                         raven_sso, raven_life, raven_params]
     
     data = '!'.join(wls_response_data)
     raven_sig = b64encode(sign(raven_pkey, data, 'sha1'))
@@ -117,7 +117,7 @@ class RavenTestCase(TestCase):
         with self.assertRaises(MalformedResponseError) as excep:
             response = self.client.get(reverse('raven_return'), 
                                        {'WLS-Response': create_wls_response(
-                                        raven_ver='3')})
+                                        raven_ver='1')})
 
         self.assertEqual(excep.exception.message,
                          'Version number does not match that in the '
@@ -198,4 +198,17 @@ class RavenTestCase(TestCase):
             self.assertEqual('http://www.cam.ac.uk/', response.redirect_chain[0][0])
             self.assertEqual(302, response.redirect_chain[0][1])
 
+    def test_not_allow_raven_for_life(self):
+        """Test Raven for life accounts credentials"""
+        response = self.client.get(reverse('raven_return'),
+                        {'WLS-Response': create_wls_response(
+                            raven_ptags='')})
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_allow_raven_for_life(self):
+        with self.settings(PYROVEN_NOT_CURRENT = True):
+            response = self.client.get(reverse('raven_return'),
+                            {'WLS-Response': create_wls_response(
+                                raven_ptags='')})
+            self.assertIn('_auth_user_id', self.client.session)
 
