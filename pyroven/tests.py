@@ -14,11 +14,13 @@ from django.contrib.auth.models import User
 
 from OpenSSL.crypto import FILETYPE_PEM, load_privatekey, sign
 
-from pyroven import InvalidResponseError, MalformedResponseError
+from pyroven import InvalidResponseError, MalformedResponseError, setting
 
 RAVEN_TEST_USER = 'test0001'
 RAVEN_TEST_PWD = 'test'
 RAVEN_NEW_USER = 'test0002'
+
+RAVEN_RETURN_URL = setting('PYROVEN_RETURN_URL')
 
 GOOD_PRIV_KEY_PEM = """-----BEGIN RSA PRIVATE KEY-----
 MIICWwIBAAKBgQC4RYvbSGb42EEEXzsz93Mubo0fdWZ7UJ0HoZXQch5XIR0Zl8AN
@@ -57,7 +59,7 @@ cbvAhow217X9V0dVerEOKxnNYspXRrh36h7k4mQA+sDq
 def create_wls_response(raven_ver='3', raven_status='200', raven_msg='',
                         raven_issue=datetime.utcnow().strftime('%Y%m%dT%H%M%SZ'),
                         raven_id='1347296083-8278-2', 
-                        raven_url='http%3A%2F%2Fwww.example.org%2Fraven_return%2F',
+                        raven_url=RAVEN_RETURN_URL,
                         raven_principal=RAVEN_TEST_USER, raven_ptags='current',
                         raven_auth='pwd', raven_sso='', raven_life='36000',
                         raven_params='', raven_kid='901',
@@ -103,7 +105,7 @@ class RavenTestCase(TestCase):
         response = self.client.get(reverse('raven_return'), 
                         {'WLS-Response': create_wls_response(
                             raven_principal=RAVEN_NEW_USER)})
-        
+
         self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_login_raven_local(self):
@@ -174,6 +176,8 @@ class RavenTestCase(TestCase):
 
             with self.assertRaises(User.DoesNotExist):
                 User.objects.get(username=RAVEN_NEW_USER)
+
+            self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_raven_user_not_local_create_true(self):
         """When valid raven user authenticates, and PYROVEN_CREATE_USER is true
