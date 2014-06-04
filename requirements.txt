@@ -1,2 +1,2 @@
 django
-PyOpenSSL==0.13
+PyOpenSSL==0.14
