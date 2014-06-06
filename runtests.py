@@ -1,4 +1,5 @@
 import os, sys
+import django
 
 from django.conf import settings
 
@@ -54,6 +55,8 @@ wOq24EIbX5LquL9w+uvnfXw=
 -----END CERTIFICATE-----
 """},
 )
+
+django.setup()
 
 from django.test.simple import DjangoTestSuiteRunner
 
