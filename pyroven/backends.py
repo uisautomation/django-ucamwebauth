@@ -39,7 +39,7 @@ class RavenAuthBackend(object):
             # If the response was malformed, we're not allowed to login
             return None
         except InvalidResponseError:
-            print("Got an invalid reponse from the Raven server")
+            print("Got an invalid response from the Raven server")
             return None
         except PublicKeyNotFoundError:
             print("Cannot find a public key for the server's response")

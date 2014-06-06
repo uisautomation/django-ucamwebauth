@@ -56,7 +56,8 @@ wOq24EIbX5LquL9w+uvnfXw=
 """},
 )
 
-django.setup()
+if django.get_version().startswith('1.7'):
+    django.setup()
 
 from django.test.simple import DjangoTestSuiteRunner
 
