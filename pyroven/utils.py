@@ -6,6 +6,8 @@ from base64 import b64decode
 
 from django.conf import settings
 from django.http import HttpResponseRedirect
+from pyroven import MalformedResponseError
+
 
 def decode_sig(sig):
     """Decodes a signature from the variant base64 used by raven.
@@ -19,9 +21,11 @@ def decode_sig(sig):
         raise MalformedResponseError("Signature is not a valid base-64 "
                                      "encoded string")
 
+
 def setting(name, default=None):
     """Returns a setting from the Django settings file"""
     return getattr(settings, name, default)
+
 
 def parse_time(time_string):
     """Converts a time of the form '20110729T123456Z' to a number of seconds
@@ -29,5 +33,8 @@ def parse_time(time_string):
     @exception ValueError if the time is not a valid Raven time"""
     return calendar.timegm(time.strptime(time_string, "%Y%m%dT%H%M%SZ"))
 
+
 class HttpResponseSeeOther(HttpResponseRedirect):
+    """An HttpResponse with a 303 status code, since django doesn't provide one
+    by default.  A 303 is required by the the WAA2WLS specification."""
     status_code = 303

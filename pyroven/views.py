@@ -22,13 +22,13 @@ def raven_return(request):
     # Redirect somewhere sensible
     return HttpResponseRedirect('/')
 
+
 def raven_login(request):
     # Get the Raven object and return a redirect to the Raven server
     login_url = setting('PYROVEN_LOGIN_URL')
     encoded_return_url = urllib.quote(setting('PYROVEN_RETURN_URL'))
-    return HttpResponseSeeOther("%s?ver=%d&url=%s" % (login_url, 3,
-                                                      encoded_return_url)
-                               )
+    return HttpResponseSeeOther("%s?ver=%d&url=%s" % (login_url, 3, encoded_return_url))
+
 
 def raven_logout(request):
     logout(request)

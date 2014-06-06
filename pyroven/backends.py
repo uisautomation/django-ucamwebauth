@@ -15,10 +15,6 @@ from pyroven import (MalformedResponseError, InvalidResponseError,
 
 from pyroven.utils import setting
 
-class HttpResponseSeeOther(HttpResponseRedirect):
-    """An HttpResponse with a 303 status code, since django doesn't provide one
-    by default.  A 303 is required by the the WAA2WLS specification."""
-    status_code = 303
 
 class RavenAuthBackend(object):
     """An authentication backend for django that uses Raven.  To use, add
