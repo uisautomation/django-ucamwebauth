@@ -16,7 +16,9 @@ def raven_return(request):
     try:
         user = authenticate(response_str=token)
     except UserNotAuthorised:
-        return HttpResponseForbidden("Authentication successful but you are not authorised to access this site")
+        return setting('PYROVEN_NOT_AUTHORISED',
+                       default=HttpResponseForbidden("Authentication successful but you are not authorised "
+                                                     "to access this site"))
 
     if user is None:
         return redirect(setting('PYROVEN_LOGOUT_REDIRECT', default='/'))

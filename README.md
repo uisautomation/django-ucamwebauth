@@ -46,6 +46,7 @@ PYROVEN_RETURN_URL: the URL of your app which the Raven service should
     return the user to after authentication.
 PYROVEN_LOGOUT_REDIRECT: a string representing the URL to where the user is redirected when she logs out of the app (Default to '/').
 PYROVEN_NOT_CURRENT: a boolean value representing if raven users that are currently not members of the university should be allowed to log in (Default to False).
+PYROVEN_NOT_AUTHORISED: a HttpResponse object with the template or message to show to a Raven4Life user when they login if PYROVEN_NOT_CURRENT is False
 PYROVEN_CERTS: a dictionary including key names and their associated
     certificates which can be downloaded from the Raven project pages.
 ```
