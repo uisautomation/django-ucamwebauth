@@ -1,8 +1,9 @@
 import urllib
 
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import redirect
+from pyroven import UserNotAuthorised
 
 from pyroven.utils import setting, HttpResponseSeeOther
 
@@ -12,7 +13,10 @@ def raven_return(request):
     token = request.GET['WLS-Response']
 
     # See if this is a valid token
-    user = authenticate(response_str=token)
+    try:
+        user = authenticate(response_str=token)
+    except UserNotAuthorised:
+        return HttpResponseForbidden("Authentication successful but you are not authorised to access this site")
 
     if user is None:
         return redirect(setting('PYROVEN_LOGOUT_REDIRECT', default='/'))

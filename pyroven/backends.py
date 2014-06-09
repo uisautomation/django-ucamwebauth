@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 
 from pyroven import (MalformedResponseError, InvalidResponseError, 
-                     RavenResponse, PublicKeyNotFoundError)
+                     RavenResponse, PublicKeyNotFoundError, UserNotAuthorised)
 
 from pyroven.utils import setting
 
@@ -49,7 +49,7 @@ class RavenAuthBackend(object):
             return None
 
         if (setting('PYROVEN_NOT_CURRENT', default=False) == False) and ('current' not in response.ptags):
-            return None
+            raise UserNotAuthorised
 
         username = response.principal
  

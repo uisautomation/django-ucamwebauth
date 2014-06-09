@@ -27,6 +27,11 @@ class PublicKeyNotFoundError(Exception):
     pass
 
 
+class UserNotAuthorised(Exception):
+    """Raised if the user is not current and the administrator does not want to authorised these type of users"""
+    pass
+
+
 class RavenResponse(object):
     """Represents a response from the raven server.  Contains fields for
     version number, status, etc. and methods for checking the validity of the
