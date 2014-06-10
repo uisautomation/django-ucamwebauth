@@ -2,6 +2,7 @@ import os, sys
 import django
 
 from django.conf import settings
+from django.test.runner import DiscoverRunner
 
 DIRNAME = os.path.dirname(__file__)
 
@@ -59,9 +60,7 @@ wOq24EIbX5LquL9w+uvnfXw=
 if django.get_version().startswith('1.7'):
     django.setup()
 
-from django.test.simple import DjangoTestSuiteRunner
-
-test_runner = DjangoTestSuiteRunner(verbosity=1)
+test_runner = DiscoverRunner(verbosity=1)
 failures = test_runner.run_tests(['pyroven', ])
 if failures:
     sys.exit(failures)

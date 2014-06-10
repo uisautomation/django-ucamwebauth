@@ -102,9 +102,10 @@ class RavenTestCase(TestCase):
 
     def test_login_raven_not_local(self):
         """Tests login of user via raven, not in database"""
-        response = self.client.get(reverse('raven_return'), 
-                        {'WLS-Response': create_wls_response(
-                            raven_principal=RAVEN_NEW_USER)})
+        with self.settings(PYROVEN_CREATE_USER=False):
+            response = self.client.get(reverse('raven_return'),
+                            {'WLS-Response': create_wls_response(
+                                raven_principal=RAVEN_NEW_USER)})
 
         self.assertNotIn('_auth_user_id', self.client.session)
 
