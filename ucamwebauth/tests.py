@@ -1,6 +1,6 @@
-"""pyroven.tests
+"""ucamwebauth.tests
 
-Contains tests for the pyroven application
+Contains tests for the ucamwebauth application
 """
 
 from datetime import datetime, timedelta
@@ -14,13 +14,13 @@ from django.contrib.auth.models import User
 
 from OpenSSL.crypto import FILETYPE_PEM, load_privatekey, sign
 
-from pyroven import InvalidResponseError, MalformedResponseError, setting
+from ucamwebauth import InvalidResponseError, MalformedResponseError, setting
 
 RAVEN_TEST_USER = 'test0001'
 RAVEN_TEST_PWD = 'test'
 RAVEN_NEW_USER = 'test0002'
 
-RAVEN_RETURN_URL = setting('PYROVEN_RETURN_URL')
+RAVEN_RETURN_URL = setting('UCAMWEBAUTH_RETURN_URL')
 
 GOOD_PRIV_KEY_PEM = """-----BEGIN RSA PRIVATE KEY-----
 MIICWwIBAAKBgQC4RYvbSGb42EEEXzsz93Mubo0fdWZ7UJ0HoZXQch5XIR0Zl8AN
@@ -102,7 +102,7 @@ class RavenTestCase(TestCase):
 
     def test_login_raven_not_local(self):
         """Tests login of user via raven, not in database"""
-        with self.settings(PYROVEN_CREATE_USER=False):
+        with self.settings(UCAMWEBAUTH_CREATE_USER=False):
             response = self.client.get(reverse('raven_return'),
                             {'WLS-Response': create_wls_response(
                                 raven_principal=RAVEN_NEW_USER)})
@@ -141,8 +141,8 @@ class RavenTestCase(TestCase):
         self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_login_issue_too_old_fails(self):
-        """Tests that Raven responses which are older than PYROVEN_TIMEOUT + 
-        PYROVEN_MAX_CLOCK_SKEW are rejected"""
+        """Tests that Raven responses which are older than UCAMWEBAUTH_TIMEOUT +
+        UCAMWEBAUTH_MAX_CLOCK_SKEW are rejected"""
         with self.assertRaises(InvalidResponseError) as excep:
             response = self.client.get(reverse('raven_return'), 
                                        {'WLS-Response': create_wls_response(
@@ -167,10 +167,10 @@ class RavenTestCase(TestCase):
         self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_create_raven_not_local_create_false(self):
-        """When valid raven user authenticates, and PYROVEN_CREATE_USER is 
+        """When valid raven user authenticates, and UCAMWEBAUTH_CREATE_USER is
         false, user is not created in database"""
 
-        with self.settings(PYROVEN_CREATE_USER=False):
+        with self.settings(UCAMWEBAUTH_CREATE_USER=False):
             response = self.client.get(reverse('raven_return'), 
                         {'WLS-Response': create_wls_response(
                            raven_principal=RAVEN_NEW_USER)})
@@ -181,10 +181,10 @@ class RavenTestCase(TestCase):
             self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_raven_user_not_local_create_true(self):
-        """When valid raven user authenticates, and PYROVEN_CREATE_USER is true
+        """When valid raven user authenticates, and UCAMWEBAUTH_CREATE_USER is true
         creates valid user in database"""
 
-        with self.settings(PYROVEN_CREATE_USER=True):
+        with self.settings(UCAMWEBAUTH_CREATE_USER=True):
             response = self.client.get(reverse('raven_return'), 
                         {'WLS-Response': create_wls_response(
                             raven_principal=RAVEN_NEW_USER)})
@@ -198,7 +198,7 @@ class RavenTestCase(TestCase):
         response = self.client.get(reverse('raven_return'), 
                         {'WLS-Response': create_wls_response()})
         self.assertIn('_auth_user_id', self.client.session)
-        with self.settings(PYROVEN_LOGOUT_REDIRECT = 'http://www.cam.ac.uk/'):
+        with self.settings(UCAMWEBAUTH_LOGOUT_REDIRECT = 'http://www.cam.ac.uk/'):
             response = self.client.get(reverse('raven_logout'), follow=True)
             self.assertEqual('http://www.cam.ac.uk/', response.redirect_chain[0][0])
             self.assertEqual(302, response.redirect_chain[0][1])
@@ -211,7 +211,7 @@ class RavenTestCase(TestCase):
         self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_allow_raven_for_life(self):
-        with self.settings(PYROVEN_NOT_CURRENT = True):
+        with self.settings(UCAMWEBAUTH_NOT_CURRENT = True):
             response = self.client.get(reverse('raven_return'),
                             {'WLS-Response': create_wls_response(
                                 raven_ptags='')})

@@ -7,7 +7,7 @@ import urllib
 
 from OpenSSL.crypto import FILETYPE_PEM, load_certificate, verify
 
-from pyroven.utils import decode_sig, setting, parse_time
+from ucamwebauth.utils import decode_sig, setting, parse_time
 
 
 class MalformedResponseError(Exception):
@@ -68,13 +68,13 @@ class RavenResponse(object):
         @param reponse_str The response string, normally passed as
         GET['WLS-Response']
         """
-        PYROVEN_RETURN_URL = setting('PYROVEN_RETURN_URL')
-        PYROVEN_VER = setting('PYROVEN_VERSION', 3)
-        PYROVEN_MAX_CLOCK_SKEW = setting('PYROVEN_MAX_CLOCK_SKEW', 2)
-        PYROVEN_TIMEOUT = setting('PYROVEN_TIMEOUT', 10)
-        PYROVEN_AAUTH = setting('PYROVEN_AAUTH', ['pwd', 'card'])
-        PYROVEN_IACT = setting('PYROVEN_IACT', False)
-        PYROVEN_CERTS = setting('PYROVEN_CERTS')
+        UCAMWEBAUTH_RETURN_URL = setting('UCAMWEBAUTH_RETURN_URL')
+        UCAMWEBAUTH_VER = setting('UCAMWEBAUTH_VERSION', 3)
+        UCAMWEBAUTH_MAX_CLOCK_SKEW = setting('UCAMWEBAUTH_MAX_CLOCK_SKEW', 2)
+        UCAMWEBAUTH_TIMEOUT = setting('UCAMWEBAUTH_TIMEOUT', 10)
+        UCAMWEBAUTH_AAUTH = setting('UCAMWEBAUTH_AAUTH', ['pwd', 'card'])
+        UCAMWEBAUTH_IACT = setting('UCAMWEBAUTH_IACT', False)
+        UCAMWEBAUTH_CERTS = setting('UCAMWEBAUTH_CERTS')
 
         # The response is a !-separated list of variables, so split it by !
         tokens = response_str.split('!')
@@ -86,7 +86,7 @@ class RavenResponse(object):
             print("Version is not integer")
             raise MalformedResponseError("Version number must be integer")
             
-        if self.ver != PYROVEN_VER:
+        if self.ver != UCAMWEBAUTH_VER:
             print("Version number doesn't match config")
             raise MalformedResponseError("Version number does not match that in the configuration")
 
@@ -131,15 +131,15 @@ class RavenResponse(object):
         self.sig = decode_sig(tokens[13])
         
         # Check that the URL is as expected
-        if self.url != PYROVEN_RETURN_URL:
+        if self.url != UCAMWEBAUTH_RETURN_URL:
             print("URL does not match")
             raise InvalidResponseError("The URL in the response does not match the URL expected")
 
         # Check that the issue time is not in the future or too far in the past:
-        if self.issue > time.time() + PYROVEN_MAX_CLOCK_SKEW:
+        if self.issue > time.time() + UCAMWEBAUTH_MAX_CLOCK_SKEW:
             print("Timestamp in future")
             raise InvalidResponseError("The timestamp on the response is in the future")
-        if self.issue < time.time() - PYROVEN_MAX_CLOCK_SKEW - PYROVEN_TIMEOUT: 
+        if self.issue < time.time() - UCAMWEBAUTH_MAX_CLOCK_SKEW - UCAMWEBAUTH_TIMEOUT:
             print("Response has timed out - issued %s, now %s" % (time.asctime(time.gmtime(self.issue)),
                                                                   time.asctime()))
             raise InvalidResponseError("The response has timed out")
@@ -148,21 +148,21 @@ class RavenResponse(object):
         print("Checking authentication types")
         if self.auth != "":
             # Authentication was done recently with this auth type
-            if PYROVEN_AAUTH != None:
-                # if PYROVEN_AAUTH == None, any type of authentication is
+            if UCAMWEBAUTH_AAUTH != None:
+                # if UCAMWEBAUTH_AAUTH == None, any type of authentication is
                 # acceptable
-                if self.auth not in PYROVEN_AAUTH:
+                if self.auth not in UCAMWEBAUTH_AAUTH:
                     print("Wrong type of auth")
                     raise InvalidResponseError("The reponse used the wrong type of authentication")
-        elif self.sso != "" and not PYROVEN_IACT:
+        elif self.sso != "" and not UCAMWEBAUTH_IACT:
             # Authentication was not done recently, and that is acceptable to us
-            if PYROVEN_IACT != None:
+            if UCAMWEBAUTH_IACT != None:
                 
                 # Get the list of auth types used on previous occasions and
                 # check that at least one of them is acceptable to us
                 auth_good = False
                 for auth_type in self.sso.split(','):
-                    if auth_type in PYROVEN_AAUTH:
+                    if auth_type in UCAMWEBAUTH_AAUTH:
                         auth_good = True
                         break
 
@@ -172,7 +172,7 @@ class RavenResponse(object):
                     print("Wrong type of auth")
                     raise InvalidResponseError("The response used the wrong type of authentication")
         else:
-            if PYROVEN_IACT:
+            if UCAMWEBAUTH_IACT:
                 # We had required an interactive authentication, but didn't get
                 # one
                 print("Interactive authentication required")
@@ -186,7 +186,7 @@ class RavenResponse(object):
         # Check that the signature is correct - first get the certificate
         print("Checking signature")
         try:
-            cert = load_certificate(FILETYPE_PEM, PYROVEN_CERTS[self.kid])
+            cert = load_certificate(FILETYPE_PEM, UCAMWEBAUTH_CERTS[self.kid])
         except KeyError:
             print("unknown public key")
             raise PublicKeyNotFoundError("We do not have the public key "

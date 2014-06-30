@@ -3,9 +3,6 @@ import django
 
 DIRNAME = os.path.dirname(__file__)
 
-if django.get_version().startswith('1.7'):
-    django.setup()
-
 from django.conf import settings
 settings.configure(
     DEBUG=True,
@@ -16,23 +13,23 @@ settings.configure(
                 },
     TIME_ZONE = 'Europe/London',
     USE_TZ = True,
-    ROOT_URLCONF='pyroven.urls',
+    ROOT_URLCONF='ucamwebauth.urls',
     INSTALLED_APPS = ('django.contrib.auth',
                       'django.contrib.contenttypes',
                       'django.contrib.sessions',
                       'django.contrib.sites',
                       'django.contrib.messages',
                       'django.contrib.staticfiles',
-                      'pyroven',
+                      'ucamwebauth',
                     ),
     AUTHENTICATION_BACKENDS = (
-                            'pyroven.backends.RavenAuthBackend',
+                            'ucamwebauth.backends.RavenAuthBackend',
                             'django.contrib.auth.backends.ModelBackend'
                             ),
-    PYROVEN_LOGIN_URL = 'https://demo.raven.cam.ac.uk/auth/authenticate.html',
-    PYROVEN_LOGOUT_URL = 'https://demo.raven.cam.ac.uk/auth/logout.html',
-    PYROVEN_RETURN_URL = 'http://www.example.org/raven_return/',
-    PYROVEN_CERTS = {'901': """-----BEGIN CERTIFICATE-----
+    UCAMWEBAUTH_LOGIN_URL = 'https://demo.raven.cam.ac.uk/auth/authenticate.html',
+    UCAMWEBAUTH_LOGOUT_URL = 'https://demo.raven.cam.ac.uk/auth/logout.html',
+    UCAMWEBAUTH_RETURN_URL = 'http://www.example.org/raven_return/',
+    UCAMWEBAUTH_CERTS = {'901': """-----BEGIN CERTIFICATE-----
 MIIDzTCCAzagAwIBAgIBADANBgkqhkiG9w0BAQQFADCBpjELMAkGA1UEBhMCR0Ix
 EDAOBgNVBAgTB0VuZ2xhbmQxEjAQBgNVBAcTCUNhbWJyaWRnZTEgMB4GA1UEChMX
 VW5pdmVyc2l0eSBvZiBDYW1icmlkZ2UxLTArBgNVBAsTJENvbXB1dGluZyBTZXJ2
@@ -59,12 +56,13 @@ wOq24EIbX5LquL9w+uvnfXw=
 )
 
 if django.get_version().startswith('1.7'):
+    django.setup()
     from django.test.runner import DiscoverRunner
     test_runner = DiscoverRunner(verbosity=1)
 else:
     from django.test.simple import DjangoTestSuiteRunner
     test_runner = DjangoTestSuiteRunner(verbosity=1)
 
-failures = test_runner.run_tests(['pyroven', ])
+failures = test_runner.run_tests(['ucamwebauth', ])
 if failures:
     sys.exit(failures)

@@ -1,34 +1,34 @@
-[![Build Status](https://travis-ci.org/abrahammartin/pyroven.svg?branch=master)](https://travis-ci.org/abrahammartin/pyroven)
+[![Build Status](https://travis-ci.org/abrahammartin/django-ucamwebauth.svg?branch=master)](https://travis-ci.org/abrahammartin/django-ucamwebauth)
 
 # Introduction
 
-pyroven is a library which provides use of Cambridge University's [Raven authentication](http://raven.cam.ac.uk/) for [Django](https://www.djangoproject.com/). It provides a Django authentication backend which can be added to `AUTHENTICATION_BACKENDS` in the Django `settings` module.
+django-ucamwebauth is a library which provides use of Cambridge University's [Raven authentication](http://raven.cam.ac.uk/) for [Django](https://www.djangoproject.com/). It provides a Django authentication backend which can be added to `AUTHENTICATION_BACKENDS` in the Django `settings` module.
 
 ## Use
 
-Install django-pyroven using pip:
+Install django-ucamwebauth using pip:
 
 ```bash
-pip install django-pyroven
+pip install django-ucamwebauth
 ```
 
 Then you can enable it within your Django project's settings.py:
 
 ```python
 AUTHENTICATION_BACKENDS = (
-    'pyroven.backends.RavenAuthBackend',
+    'ucamwebauth.backends.RavenAuthBackend',
     'django.contrib.auth.backends.ModelBackend'
 )
 ```
 
 This allows both normal Django login and Raven login.
 
-You should then enable the URLs for pyroven:
+You should then enable the URLs for ucamwebauth:
 
 ````python
 urlpatterns = patterns('',
     ...
-    url(r'', include('pyroven.urls')),
+    url(r'', include('ucamwebauth.urls')),
     ...
 )
 ````
@@ -40,21 +40,21 @@ You then need to configure the app's settings. Raven has a live and test environ
 There are four minimum config settings:
 
 ```python
-PYROVEN_LOGIN_URL: a string representing the URL for the Raven login redirect.
-PYROVEN_LOGOUT_URL: a string representing the logout URL for Raven.
-PYROVEN_RETURN_URL: the URL of your app which the Raven service should
+UCAMWEBAUTH_LOGIN_URL: a string representing the URL for the Raven login redirect.
+UCAMWEBAUTH_LOGOUT_URL: a string representing the logout URL for Raven.
+UCAMWEBAUTH_RETURN_URL: the URL of your app which the Raven service should
     return the user to after authentication.
-PYROVEN_LOGOUT_REDIRECT: a string representing the URL to where the user is redirected when she logs out of the app (Default to '/').
-PYROVEN_NOT_CURRENT: a boolean value representing if raven users that are currently not members of the university should be allowed to log in (Default to False).
-PYROVEN_NOT_AUTHORISED: a HttpResponse object with the template or message to show to a Raven4Life user when they login if PYROVEN_NOT_CURRENT is False
-PYROVEN_CERTS: a dictionary including key names and their associated
+UCAMWEBAUTH_LOGOUT_REDIRECT: a string representing the URL to where the user is redirected when she logs out of the app (Default to '/').
+UCAMWEBAUTH_NOT_CURRENT: a boolean value representing if raven users that are currently not members of the university should be allowed to log in (Default to False).
+UCAMWEBAUTH_NOT_AUTHORISED: a HttpResponse object with the template or message to show to a Raven4Life user when they login if UCAMWEBAUTH_NOT_CURRENT is False
+UCAMWEBAUTH_CERTS: a dictionary including key names and their associated
     certificates which can be downloaded from the Raven project pages.
 ```
 
 The final major setting is:
 
 ```python
-PYROVEN_CREATE_USER = False
+UCAMWEBAUTH_CREATE_USER = False
 ```
 
 This defaults to False, but when True, allows the autocreation of users who have been successfully authenticated by Raven, but do not exist in the local database. The user is created with set_unusable_password().
@@ -62,12 +62,12 @@ This defaults to False, but when True, allows the autocreation of users who have
 An example, referencing the Raven test environment is given below:
 
 ```python
-PYROVEN_LOGIN_URL = 'https://demo.raven.cam.ac.uk/auth/authenticate.html'
-PYROVEN_LOGOUT_URL = 'https://demo.raven.cam.ac.uk/auth/logout.html'
-PYROVEN_RETURN_URL = 'http://your.example.com/raven_return/'
-PYROVEN_LOGOUT_REDIRECT = 'http://www.cam.ac.uk/'
-PYROVEN_NOT_CURRENT = False
-PYROVEN_CERTS = {'901': """-----BEGIN CERTIFICATE-----
+UCAMWEBAUTH_LOGIN_URL = 'https://demo.raven.cam.ac.uk/auth/authenticate.html'
+UCAMWEBAUTH_LOGOUT_URL = 'https://demo.raven.cam.ac.uk/auth/logout.html'
+UCAMWEBAUTH_RETURN_URL = 'http://your.example.com/raven_return/'
+UCAMWEBAUTH_LOGOUT_REDIRECT = 'http://www.cam.ac.uk/'
+UCAMWEBAUTH_NOT_CURRENT = False
+UCAMWEBAUTH_CERTS = {'901': """-----BEGIN CERTIFICATE-----
 MIIDzTCCAzagAwIBAgIBADANBgkqhkiG9w0BAQQFADCBpjELMAkGA1UEBhMCR0Ix
 EDAOBgNVBAgTB0VuZ2xhbmQxEjAQBgNVBAcTCUNhbWJyaWRnZTEgMB4GA1UEChMX
 VW5pdmVyc2l0eSBvZiBDYW1icmlkZ2UxLTArBgNVBAsTJENvbXB1dGluZyBTZXJ2
@@ -95,13 +95,13 @@ wOq24EIbX5LquL9w+uvnfXw=
 
 ## Additional Config Settings
 
-Extra settings which can be used to fine tune the performance of django-pyroven include: 
+Extra settings which can be used to fine tune the performance of django-ucamwebauth include: 
 
 ```python
-PYROVEN_MAX_CLOCK_SKEW = ''
-PYROVEN_TIMEOUT = ''
-PYROVEN_IACT = ''
-PYROVEN_AAUTH = ''
+UCAMWEBAUTH_MAX_CLOCK_SKEW = ''
+UCAMWEBAUTH_TIMEOUT = ''
+UCAMWEBAUTH_IACT = ''
+UCAMWEBAUTH_AAUTH = ''
 ```
 
 The details of these can be found in the Raven WLS protocol documentation, [here](http://raven.cam.ac.uk/project/waa2wls-protocol.txt).

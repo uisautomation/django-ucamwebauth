@@ -10,15 +10,15 @@ import traceback
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 
-from pyroven import (MalformedResponseError, InvalidResponseError, 
+from ucamwebauth import (MalformedResponseError, InvalidResponseError,
                      RavenResponse, PublicKeyNotFoundError, UserNotAuthorised)
 
-from pyroven.utils import setting
+from ucamwebauth.utils import setting
 
 
 class RavenAuthBackend(object):
     """An authentication backend for django that uses Raven.  To use, add
-    'pyroven.backends.RavenAuthBackend' to AUTHENTICATION_BACKENDS 
+    'ucamwebauth.backends.RavenAuthBackend' to AUTHENTICATION_BACKENDS
     in your django settings.py."""
 
     def authenticate(self, response_str=None):
@@ -48,7 +48,7 @@ class RavenAuthBackend(object):
             traceback.print_exc()
             return None
 
-        if (setting('PYROVEN_NOT_CURRENT', default=False) == False) and ('current' not in response.ptags):
+        if (setting('UCAMWEBAUTH_NOT_CURRENT', default=False) == False) and ('current' not in response.ptags):
             raise UserNotAuthorised
 
         username = response.principal
@@ -67,7 +67,7 @@ class RavenAuthBackend(object):
             print("Successfully authenticated as %s in Raven, but that user "
                   "does not exist in Django" % username)
 
-            if setting('PYROVEN_CREATE_USER', default=False) == True:
+            if setting('UCAMWEBAUTH_CREATE_USER', default=False) == True:
                 print("Creating user for %s" % username)
                 user = User(username=username)
                 user.set_unusable_password()
