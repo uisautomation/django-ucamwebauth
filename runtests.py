@@ -1,10 +1,12 @@
 import os, sys
 import django
 
-from django.conf import settings
-
 DIRNAME = os.path.dirname(__file__)
 
+if django.get_version().startswith('1.7'):
+    django.setup()
+
+from django.conf import settings
 settings.configure(
     DEBUG=True,
     DATABASES = {'default': {
@@ -57,7 +59,6 @@ wOq24EIbX5LquL9w+uvnfXw=
 )
 
 if django.get_version().startswith('1.7'):
-    django.setup()
     from django.test.runner import DiscoverRunner
     test_runner = DiscoverRunner(verbosity=1)
 else:

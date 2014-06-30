@@ -122,7 +122,7 @@ class RavenTestCase(TestCase):
                                        {'WLS-Response': create_wls_response(
                                         raven_ver='1')})
 
-        self.assertEqual(excep.exception.message,
+        self.assertEqual(str(excep.exception),
                          'Version number does not match that in the '
                          'configuration')
         self.assertNotIn('_auth_user_id', self.client.session)
@@ -136,7 +136,7 @@ class RavenTestCase(TestCase):
                                         timedelta(hours=1))
                                         .strftime('%Y%m%dT%H%M%SZ'))})
         
-        self.assertEqual(excep.exception.message, 
+        self.assertEqual(str(excep.exception),
                          'The timestamp on the response is in the future')
         self.assertNotIn('_auth_user_id', self.client.session)
 
@@ -150,7 +150,7 @@ class RavenTestCase(TestCase):
                                         timedelta(hours=-1))
                                         .strftime('%Y%m%dT%H%M%SZ'))})
 
-        self.assertEqual(excep.exception.message,
+        self.assertEqual(str(excep.exception),
                          'The response has timed out')
         self.assertNotIn('_auth_user_id', self.client.session)
 
@@ -162,7 +162,7 @@ class RavenTestCase(TestCase):
                                         create_wls_response(
                                         raven_key_pem=BAD_PRIV_KEY_PEM)})
         
-        self.assertEqual(excep.exception.message,
+        self.assertEqual(str(excep.exception),
                          'The signature for this response is not valid.')
         self.assertNotIn('_auth_user_id', self.client.session)
 
