@@ -1,18 +1,7 @@
-#   Copyright 2011 Andrew Ryrie (amr66)
-
-"""
-Provides the backend for the Django Pyroven
-"""
-
-import urllib
 import traceback
-
 from django.contrib.auth.models import User
-from django.http import HttpResponseRedirect
-
-from ucamwebauth import (MalformedResponseError, InvalidResponseError,
-                     RavenResponse, PublicKeyNotFoundError, UserNotAuthorised)
-
+from ucamwebauth import (MalformedResponseError, InvalidResponseError, RavenResponse,
+                         PublicKeyNotFoundError, UserNotAuthorised)
 from ucamwebauth.utils import setting
 
 
