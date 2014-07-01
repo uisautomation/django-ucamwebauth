@@ -59,6 +59,7 @@ cbvAhow217X9V0dVerEOKxnNYspXRrh36h7k4mQA+sDq
 -----END RSA PRIVATE KEY-----
 """
 
+
 def create_wls_response(raven_ver='3', raven_status='200', raven_msg='',
                         raven_issue=datetime.utcnow().strftime('%Y%m%dT%H%M%SZ'),
                         raven_id='1347296083-8278-2', 
@@ -92,6 +93,7 @@ def create_wls_response(raven_ver='3', raven_status='200', raven_msg='',
 
     return '!'.join(wls_response_data)
 
+
 class RavenTestCase(TestCase):
     """RavenTestCase
     Authentication tests for the Raven service
@@ -105,131 +107,96 @@ class RavenTestCase(TestCase):
 
     def do_login(self):
         response = requests.post('https://demo.raven.cam.ac.uk/auth/authenticate2.html',
-                                {'url': settings.UCAMWEBAUTH_RETURN_URL,
-                                 'userid': 'test0001', 'pwd': 'test',
-                                 'ver': '3'},
-                                allow_redirects=False)
-        redirect_url = urllib.unquote(response.headers['refresh'].split('URL=')[1])
+                                 {'url': settings.UCAMWEBAUTH_RETURN_URL,
+                                  'userid': 'test0001', 'pwd': 'test',
+                                  'ver': '3'}, allow_redirects=False)
+        self.assertEqual(303, response.status_code)
+        redirect_url = urllib.unquote(response.headers['location'])
         self.client.get(reverse('raven_return'), {'WLS-Response': redirect_url.split('WLS-Response=')[1]})
 
-    def test_raven_protocol(self):
+    def test_real_raven_test_service(self):
         self.do_login()
         self.assertIn('_auth_user_id', self.client.session)
 
     def test_login_raven_not_local(self):
         """Tests login of user via raven, not in database"""
         with self.settings(UCAMWEBAUTH_CREATE_USER=False):
-            response = self.client.get(reverse('raven_return'),
-                            {'WLS-Response': create_wls_response(
-                                raven_principal=RAVEN_NEW_USER)})
-
+            self.client.get(reverse('raven_return'),
+                            {'WLS-Response': create_wls_response(raven_principal=RAVEN_NEW_USER)})
         self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_login_raven_local(self):
         """Tests login of user who exists in database"""
-        response = self.client.get(reverse('raven_return'), 
-                        {'WLS-Response': create_wls_response()})
-
+        self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response()})
         self.assertIn('_auth_user_id', self.client.session)
 
     def test_login_invalid_version_fails(self): 
         with self.assertRaises(MalformedResponseError) as excep:
-            response = self.client.get(reverse('raven_return'), 
-                                       {'WLS-Response': create_wls_response(
-                                        raven_ver='1')})
-
-        self.assertEqual(str(excep.exception),
-                         'Version number does not match that in the '
-                         'configuration')
+            self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response(raven_ver='1')})
+        self.assertEqual(str(excep.exception), 'Version number does not match that in the configuration')
         self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_login_issue_future_fails(self):
         """Tests that Raven responses issued in the future fail validation"""
         with self.assertRaises(InvalidResponseError) as excep:
-            response = self.client.get(reverse('raven_return'), 
-                                       {'WLS-Response': create_wls_response(
-                                        raven_issue=(datetime.utcnow() + 
-                                        timedelta(hours=1))
-                                        .strftime('%Y%m%dT%H%M%SZ'))})
-        
-        self.assertEqual(str(excep.exception),
-                         'The timestamp on the response is in the future')
+            self.client.get(reverse('raven_return'),
+                            {'WLS-Response': create_wls_response(
+                                raven_issue=(datetime.utcnow() + timedelta(hours=1)).strftime('%Y%m%dT%H%M%SZ'))})
+        self.assertEqual(str(excep.exception), 'The timestamp on the response is in the future')
         self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_login_issue_too_old_fails(self):
         """Tests that Raven responses which are older than UCAMWEBAUTH_TIMEOUT +
         UCAMWEBAUTH_MAX_CLOCK_SKEW are rejected"""
         with self.assertRaises(InvalidResponseError) as excep:
-            response = self.client.get(reverse('raven_return'), 
-                                       {'WLS-Response': create_wls_response(
-                                        raven_issue=(datetime.utcnow() + 
-                                        timedelta(hours=-1))
-                                        .strftime('%Y%m%dT%H%M%SZ'))})
-
-        self.assertEqual(str(excep.exception),
-                         'The response has timed out')
+            self.client.get(reverse('raven_return'),
+                            {'WLS-Response': create_wls_response(
+                                raven_issue=(datetime.utcnow() + timedelta(hours=-1)).strftime('%Y%m%dT%H%M%SZ'))})
+        self.assertEqual(str(excep.exception), 'The response has timed out')
         self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_login_wrong_private_key_fails(self):
         """Tests that Raven responses with invalid key fail"""
         with self.assertRaises(InvalidResponseError) as excep:
-            response = self.client.get(reverse('raven_return'), 
-                                       {'WLS-Response': 
-                                        create_wls_response(
-                                        raven_key_pem=BAD_PRIV_KEY_PEM)})
-        
-        self.assertEqual(str(excep.exception),
-                         'The signature for this response is not valid.')
+            self.client.get(reverse('raven_return'),
+                            {'WLS-Response': create_wls_response(raven_key_pem=BAD_PRIV_KEY_PEM)})
+        self.assertEqual(str(excep.exception), 'The signature for this response is not valid.')
         self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_create_raven_not_local_create_false(self):
         """When valid raven user authenticates, and UCAMWEBAUTH_CREATE_USER is
         false, user is not created in database"""
-
         with self.settings(UCAMWEBAUTH_CREATE_USER=False):
-            response = self.client.get(reverse('raven_return'), 
-                        {'WLS-Response': create_wls_response(
-                           raven_principal=RAVEN_NEW_USER)})
-
+            self.client.get(reverse('raven_return'),
+                            {'WLS-Response': create_wls_response(raven_principal=RAVEN_NEW_USER)})
             with self.assertRaises(User.DoesNotExist):
                 User.objects.get(username=RAVEN_NEW_USER)
-
             self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_raven_user_not_local_create_true(self):
         """When valid raven user authenticates, and UCAMWEBAUTH_CREATE_USER is true
         creates valid user in database"""
-
         with self.settings(UCAMWEBAUTH_CREATE_USER=True):
-            response = self.client.get(reverse('raven_return'), 
-                        {'WLS-Response': create_wls_response(
-                            raven_principal=RAVEN_NEW_USER)})
-
+            self.client.get(reverse('raven_return'),
+                            {'WLS-Response': create_wls_response(raven_principal=RAVEN_NEW_USER)})
             user = User.objects.get(username=RAVEN_NEW_USER)
-            
             self.assertFalse(user.has_usable_password())
 
     def test_logout_redirect_url(self):
         """Tests the logout redirection"""
-        response = self.client.get(reverse('raven_return'), 
-                        {'WLS-Response': create_wls_response()})
+        self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response()})
         self.assertIn('_auth_user_id', self.client.session)
-        with self.settings(UCAMWEBAUTH_LOGOUT_REDIRECT = 'http://www.cam.ac.uk/'):
+        with self.settings(UCAMWEBAUTH_LOGOUT_REDIRECT='http://www.cam.ac.uk/'):
             response = self.client.get(reverse('raven_logout'), follow=True)
             self.assertEqual('http://www.cam.ac.uk/', response.redirect_chain[0][0])
             self.assertEqual(302, response.redirect_chain[0][1])
 
     def test_not_allow_raven_for_life(self):
         """Test Raven for life accounts credentials"""
-        response = self.client.get(reverse('raven_return'),
-                        {'WLS-Response': create_wls_response(
-                            raven_ptags='')})
+        self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response(raven_ptags='')})
         self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_allow_raven_for_life(self):
-        with self.settings(UCAMWEBAUTH_NOT_CURRENT = True):
-            response = self.client.get(reverse('raven_return'),
-                            {'WLS-Response': create_wls_response(
-                                raven_ptags='')})
+        with self.settings(UCAMWEBAUTH_NOT_CURRENT=True):
+            self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response(raven_ptags='')})
             self.assertIn('_auth_user_id', self.client.session)
-

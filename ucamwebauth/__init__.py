@@ -148,7 +148,7 @@ class RavenResponse(object):
         print("Checking authentication types")
         if self.auth != "":
             # Authentication was done recently with this auth type
-            if UCAMWEBAUTH_AAUTH != None:
+            if UCAMWEBAUTH_AAUTH is not None:
                 # if UCAMWEBAUTH_AAUTH == None, any type of authentication is
                 # acceptable
                 if self.auth not in UCAMWEBAUTH_AAUTH:
@@ -156,7 +156,7 @@ class RavenResponse(object):
                     raise InvalidResponseError("The reponse used the wrong type of authentication")
         elif self.sso != "" and not UCAMWEBAUTH_IACT:
             # Authentication was not done recently, and that is acceptable to us
-            if UCAMWEBAUTH_IACT != None:
+            if UCAMWEBAUTH_IACT is not None:
                 
                 # Get the list of auth types used on previous occasions and
                 # check that at least one of them is acceptable to us
@@ -200,7 +200,7 @@ class RavenResponse(object):
         # Check that it matches
         try:
             verify(cert, self.sig, data.encode(), 'sha1')
-        except Exception, e:
+        except Exception:
             raise InvalidResponseError("The signature for this response is not valid.")
 
     def validate(self):

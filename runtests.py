@@ -6,15 +6,11 @@ DIRNAME = os.path.dirname(__file__)
 from django.conf import settings
 settings.configure(
     DEBUG=True,
-    DATABASES = {'default': {
-                    'ENGINE': 'django.db.backends.sqlite3', 
-                    'NAME': 'test.db',                      
-                    }
-                },
-    TIME_ZONE = 'Europe/London',
-    USE_TZ = True,
+    DATABASES={'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'test.db', }},
+    TIME_ZONE='Europe/London',
+    USE_TZ=True,
     ROOT_URLCONF='ucamwebauth.urls',
-    INSTALLED_APPS = (
+    INSTALLED_APPS=(
         'django.contrib.auth',
         'django.contrib.contenttypes',
         'django.contrib.sessions',
@@ -22,8 +18,8 @@ settings.configure(
         'django.contrib.messages',
         'django.contrib.staticfiles',
         'ucamwebauth', ),
-    AUTHENTICATION_BACKENDS = ( 'ucamwebauth.backends.RavenAuthBackend', ),
-    MIDDLEWARE_CLASSES = (
+    AUTHENTICATION_BACKENDS=('ucamwebauth.backends.RavenAuthBackend', ),
+    MIDDLEWARE_CLASSES=(
         'django.contrib.sessions.middleware.SessionMiddleware',
         'django.middleware.common.CommonMiddleware',
         'django.middleware.csrf.CsrfViewMiddleware',
@@ -31,10 +27,10 @@ settings.configure(
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
     ),
-    UCAMWEBAUTH_LOGIN_URL = 'https://demo.raven.cam.ac.uk/auth/authenticate.html',
-    UCAMWEBAUTH_LOGOUT_URL = 'https://demo.raven.cam.ac.uk/auth/logout.html',
-    UCAMWEBAUTH_RETURN_URL = 'http://www.example.org/raven_return/',
-    UCAMWEBAUTH_CERTS = {'901': """-----BEGIN CERTIFICATE-----
+    UCAMWEBAUTH_LOGIN_URL='https://demo.raven.cam.ac.uk/auth/authenticate.html',
+    UCAMWEBAUTH_LOGOUT_URL='https://demo.raven.cam.ac.uk/auth/logout.html',
+    UCAMWEBAUTH_RETURN_URL='http://www.example.org/raven_return/',
+    UCAMWEBAUTH_CERTS={'901': """-----BEGIN CERTIFICATE-----
 MIIDzTCCAzagAwIBAgIBADANBgkqhkiG9w0BAQQFADCBpjELMAkGA1UEBhMCR0Ix
 EDAOBgNVBAgTB0VuZ2xhbmQxEjAQBgNVBAcTCUNhbWJyaWRnZTEgMB4GA1UEChMX
 VW5pdmVyc2l0eSBvZiBDYW1icmlkZ2UxLTArBgNVBAsTJENvbXB1dGluZyBTZXJ2

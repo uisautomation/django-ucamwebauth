@@ -44,11 +44,11 @@ class RavenAuthBackend(object):
         except PublicKeyNotFoundError:
             print("Cannot find a public key for the server's response")
             return None
-        except Exception as e:
+        except Exception:
             traceback.print_exc()
             return None
 
-        if (setting('UCAMWEBAUTH_NOT_CURRENT', default=False) == False) and ('current' not in response.ptags):
+        if (setting('UCAMWEBAUTH_NOT_CURRENT', default=False) is False) and ('current' not in response.ptags):
             raise UserNotAuthorised
 
         username = response.principal
@@ -67,7 +67,7 @@ class RavenAuthBackend(object):
             print("Successfully authenticated as %s in Raven, but that user "
                   "does not exist in Django" % username)
 
-            if setting('UCAMWEBAUTH_CREATE_USER', default=False) == True:
+            if setting('UCAMWEBAUTH_CREATE_USER', default=False) is True:
                 print("Creating user for %s" % username)
                 user = User(username=username)
                 user.set_unusable_password()
@@ -75,7 +75,7 @@ class RavenAuthBackend(object):
                 return user
             else:
                 print("User %s not created" % username)
-            
+
             return None
         else:
             print("%s successfully authenticated via Raven" % username)
