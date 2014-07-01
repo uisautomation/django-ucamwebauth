@@ -6,8 +6,7 @@ from distutils.core import setup
 
 setup(name='django-ucamwebauth',
       description='A Django authentication backend for Ucam-WebAuth / Raven',
-#     No long_description due to http://bugs.python.org/issue13614
-#     long_description=open('README.md').read(),
+      long_description=open('README.md').read(),
       url='https://git.csx.cam.ac.uk/x/ucs/raven/django-ucamwebauth.git',
       version='1.0',
       license='MIT',

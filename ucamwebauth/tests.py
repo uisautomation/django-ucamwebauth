@@ -6,13 +6,16 @@ Contains tests for the ucamwebauth application
 from datetime import datetime, timedelta
 from base64 import b64encode
 from string import maketrans
+import urllib
+import requests
+from OpenSSL.crypto import FILETYPE_PEM, load_privatekey, sign
 
+from django.conf import settings
 from django.test import TestCase
 from django.test.client import Client
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 
-from OpenSSL.crypto import FILETYPE_PEM, load_privatekey, sign
 
 from ucamwebauth import InvalidResponseError, MalformedResponseError, setting
 
@@ -99,6 +102,19 @@ class RavenTestCase(TestCase):
     def __init__(self, *args, **kwargs):
         self.client = Client()
         super(RavenTestCase, self).__init__(*args, **kwargs)
+
+    def do_login(self):
+        response = requests.post('https://demo.raven.cam.ac.uk/auth/authenticate2.html',
+                                {'url': settings.UCAMWEBAUTH_RETURN_URL,
+                                 'userid': 'test0001', 'pwd': 'test',
+                                 'ver': '3'},
+                                allow_redirects=False)
+        redirect_url = urllib.unquote(response.headers['refresh'].split('URL=')[1])
+        self.client.get(reverse('raven_return'), {'WLS-Response': redirect_url.split('WLS-Response=')[1]})
+
+    def test_raven_protocol(self):
+        self.do_login()
+        self.assertIn('_auth_user_id', self.client.session)
 
     def test_login_raven_not_local(self):
         """Tests login of user via raven, not in database"""
