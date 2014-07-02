@@ -1,8 +1,7 @@
 import logging
-import traceback
-from django.contrib.auth.models import User, UserManager
-from ucamwebauth import (MalformedResponseError, InvalidResponseError, RavenResponse,
-                         PublicKeyNotFoundError, UserNotAuthorised)
+from django.contrib.auth.models import User
+from ucamwebauth import RavenResponse
+from ucamwebauth.exceptions import UserNotAuthorised
 from ucamwebauth.utils import setting
 
 logger = logging.getLogger(__name__)
@@ -17,29 +16,18 @@ class RavenAuthBackend(object):
         it is, returns the User with the same username as the Raven username.
         @return User object, or None if authentication failed"""
 
-        if response_str is None:
-            return None
-
-        response = RavenResponse(response_str)
-
         # Check that everything is correct, and return
         try:
-            response.validate()
-        except MalformedResponseError:
-            logger.error("Got a malformed response from the Raven server")
-            return None
-        except InvalidResponseError:
-            logger.error("Got an invalid response from the Raven server")
-            return None
-        except PublicKeyNotFoundError:
-            logger.error("Cannot find a public key for the server's response")
-            return None
+            response = RavenResponse(response_str)
         except Exception as e:
-            logger.error(e)
+            logger.error("%s: %s" % (type(e).__name__, e))
+            raise e
+
+        if not response.validate():
             return None
 
         if (setting('UCAMWEBAUTH_NOT_CURRENT', default=False) is False) and ('current' not in response.ptags):
-            raise UserNotAuthorised
+            raise UserNotAuthorised()
 
         username = response.principal
  

@@ -7,6 +7,8 @@ from base64 import b64decode
 from django.conf import settings
 from django.http import HttpResponseRedirect
 
+from ucamwebauth.exceptions import MalformedResponseError
+
 
 def decode_sig(sig):
     """Decodes a signature from the variant base64 used by raven.

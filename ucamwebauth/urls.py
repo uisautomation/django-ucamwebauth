@@ -1,5 +1,4 @@
-from django.conf.urls import patterns, include, url
-
+from django.conf.urls import patterns, url
 from ucamwebauth.views import raven_login, raven_logout, raven_return
 
 urlpatterns = patterns('',
