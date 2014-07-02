@@ -1,3 +1,4 @@
+import logging
 import os, sys
 import django
 
@@ -56,10 +57,15 @@ wOq24EIbX5LquL9w+uvnfXw=
 """},
 )
 
+logging.basicConfig()
+
 if django.get_version().startswith('1.7'):
     django.setup()
     from django.test.runner import DiscoverRunner
-    test_runner = DiscoverRunner(verbosity=1)
+    test_runner = DiscoverRunner()
+elif django.get_version().startswith('1.6'):
+    from django.test.runner import DiscoverRunner
+    test_runner = DiscoverRunner()
 else:
     from django.test.simple import DjangoTestSuiteRunner
     test_runner = DjangoTestSuiteRunner(verbosity=1)

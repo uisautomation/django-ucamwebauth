@@ -3,12 +3,14 @@
 import calendar, time
 import ast
 import hashlib
+import logging
 import urllib
 
 from OpenSSL.crypto import FILETYPE_PEM, load_certificate, verify
 
 from ucamwebauth.utils import decode_sig, setting, parse_time
 
+logger = logging.getLogger(__name__)
 
 class MalformedResponseError(Exception):
     """Raised if a response from the raven server is malformed."""
@@ -83,34 +85,32 @@ class RavenResponse(object):
         try:
             self.ver = int(tokens[0])
         except ValueError:
-            print("Version is not integer")
+            logger.error("Version is not integer")
             raise MalformedResponseError("Version number must be integer")
             
         if self.ver != UCAMWEBAUTH_VER:
-            print("Version number doesn't match config")
+            logger.error("Version number doesn't match config")
             raise MalformedResponseError("Version number does not match that in the configuration")
 
         if self.ver != 3:
-            print("Version number not supported")
+            logger.error("Version number not supported")
             raise MalformedResponseError("Unsupported version: %d" % self.ver)
 
         if len(tokens) != 14:
-            print("wrong number params in response")
-            raise MalformedResponseError("Wrong number of parameters in "
-                                         "response: expected 14, got %d"
-                                         % len(tokens))
+            logger.error("wrong number params in response")
+            raise MalformedResponseError("Wrong number of parameters in response: expected 14, got %d" % len(tokens))
         
         # Get all the tokens from the request
         try:
             self.status = int(tokens[1])
         except ValueError:
-            print("status code must be integer")
+            logger.error("status code must be integer")
             raise MalformedResponseError("Status code must be an integer, not %s" % tokens[1])
         self.msg = tokens[2]
         try:
             self.issue = parse_time(tokens[3])
         except ValueError:
-            print("Issue time is not a valid raven time")
+            logger.error("Issue time is not a valid raven time")
             raise MalformedResponseError("Issue time is not a valid Raven time, not %s" % tokens[3])
         self.ident = tokens[4]
         self.url = urllib.unquote(tokens[5])
@@ -124,7 +124,7 @@ class RavenResponse(object):
             try:
                 self.life = int(tokens[10])
             except ValueError:
-                print("lifetime is not an integer")
+                logger.error("lifetime is not an integer")
                 raise MalformedResponseError("Life must be an integer, not %s" % tokens[10])
         self.params = tokens[11]
         self.kid = tokens[12]
@@ -132,27 +132,27 @@ class RavenResponse(object):
         
         # Check that the URL is as expected
         if self.url != UCAMWEBAUTH_RETURN_URL:
-            print("URL does not match")
+            logger.error("URL does not match")
             raise InvalidResponseError("The URL in the response does not match the URL expected")
 
         # Check that the issue time is not in the future or too far in the past:
         if self.issue > time.time() + UCAMWEBAUTH_MAX_CLOCK_SKEW:
-            print("Timestamp in future")
+            logger.error("Timestamp in future")
             raise InvalidResponseError("The timestamp on the response is in the future")
         if self.issue < time.time() - UCAMWEBAUTH_MAX_CLOCK_SKEW - UCAMWEBAUTH_TIMEOUT:
-            print("Response has timed out - issued %s, now %s" % (time.asctime(time.gmtime(self.issue)),
-                                                                  time.asctime()))
+            logger.error("Response has timed out - issued %s, now %s" % (time.asctime(time.gmtime(self.issue)),
+                                                                         time.asctime()))
             raise InvalidResponseError("The response has timed out")
 
         # Check that the type of authentication was acceptable
-        print("Checking authentication types")
+        logger.debug("Checking authentication types")
         if self.auth != "":
             # Authentication was done recently with this auth type
             if UCAMWEBAUTH_AAUTH is not None:
                 # if UCAMWEBAUTH_AAUTH == None, any type of authentication is
                 # acceptable
                 if self.auth not in UCAMWEBAUTH_AAUTH:
-                    print("Wrong type of auth")
+                    logger.error("Wrong type of auth")
                     raise InvalidResponseError("The reponse used the wrong type of authentication")
         elif self.sso != "" and not UCAMWEBAUTH_IACT:
             # Authentication was not done recently, and that is acceptable to us
@@ -169,26 +169,26 @@ class RavenResponse(object):
                 # If none of the previous types match one we asked for, raise an
                 # error
                 if not auth_good:
-                    print("Wrong type of auth")
+                    logger.error("Wrong type of auth")
                     raise InvalidResponseError("The response used the wrong type of authentication")
         else:
             if UCAMWEBAUTH_IACT:
                 # We had required an interactive authentication, but didn't get
                 # one
-                print("Interactive authentication required")
+                logger.error("Interactive authentication required")
                 raise InvalidResponseError("Interactive authentication required but not received")
             else:
                 # Both auth and sso are empty, which is not allowed
-                print("no authentication types supplied")
+                logger.error("no authentication types supplied")
                 raise MalformedResponseError("No authentication types supplied")
         # Done checking the authentication type was acceptable
 
         # Check that the signature is correct - first get the certificate
-        print("Checking signature")
+        logger.debug("Checking signature")
         try:
             cert = load_certificate(FILETYPE_PEM, UCAMWEBAUTH_CERTS[self.kid])
         except KeyError:
-            print("unknown public key")
+            logger.error("unknown public key")
             raise PublicKeyNotFoundError("We do not have the public key "
                                          "corresponding to the key the server "
                                          "signed the response with")

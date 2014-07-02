@@ -17,8 +17,7 @@ def decode_sig(sig):
     try:
         return b64decode(sig)
     except TypeError:
-        raise MalformedResponseError("Signature is not a valid base-64 "
-                                     "encoded string")
+        raise MalformedResponseError("Signature is not a valid base-64 encoded string")
 
 
 def setting(name, default=None):

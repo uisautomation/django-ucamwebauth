@@ -1,9 +1,11 @@
+import logging
 import traceback
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, UserManager
 from ucamwebauth import (MalformedResponseError, InvalidResponseError, RavenResponse,
                          PublicKeyNotFoundError, UserNotAuthorised)
 from ucamwebauth.utils import setting
 
+logger = logging.getLogger(__name__)
 
 class RavenAuthBackend(object):
     """An authentication backend for django that uses Raven.  To use, add
@@ -24,17 +26,16 @@ class RavenAuthBackend(object):
         try:
             response.validate()
         except MalformedResponseError:
-            print("Got a malformed response from the Raven server")
-            # If the response was malformed, we're not allowed to login
+            logger.error("Got a malformed response from the Raven server")
             return None
         except InvalidResponseError:
-            print("Got an invalid response from the Raven server")
+            logger.error("Got an invalid response from the Raven server")
             return None
         except PublicKeyNotFoundError:
-            print("Cannot find a public key for the server's response")
+            logger.error("Cannot find a public key for the server's response")
             return None
-        except Exception:
-            traceback.print_exc()
+        except Exception as e:
+            logger.error(e)
             return None
 
         if (setting('UCAMWEBAUTH_NOT_CURRENT', default=False) is False) and ('current' not in response.ptags):
@@ -53,21 +54,17 @@ class RavenAuthBackend(object):
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
-            print("Successfully authenticated as %s in Raven, but that user "
-                  "does not exist in Django" % username)
+            logger.debug("Successfully authenticated as %s in Raven, but that user does not exist in Django" % username)
 
             if setting('UCAMWEBAUTH_CREATE_USER', default=False) is True:
-                print("Creating user for %s" % username)
-                user = User(username=username)
-                user.set_unusable_password()
-                user.save()
-                return user
+                logger.debug("Creating user for %s" % username)
+                return User.objects.create_user(username=username)
             else:
-                print("User %s not created" % username)
+                logger.debug("User %s not created" % username)
 
             return None
         else:
-            print("%s successfully authenticated via Raven" % username)
+            logger.debug("%s successfully authenticated via Raven" % username)
             return user
 
     def get_user(self, user_id):
@@ -76,7 +73,7 @@ class RavenAuthBackend(object):
         try:
             user = User.objects.get(pk=user_id)
         except User.DoesNotExist:
-            print("No such user: %s" % user_id)
+            logger.debug("No such user: %s" % user_id)
             return None
         else:
             return user
