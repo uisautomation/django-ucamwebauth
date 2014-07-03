@@ -146,8 +146,7 @@ class RavenTestCase(TestCase):
         self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_login_issue_too_old_fails(self):
-        """Tests that Raven responses which are older than UCAMWEBAUTH_TIMEOUT +
-        UCAMWEBAUTH_MAX_CLOCK_SKEW are rejected"""
+        """Tests that Raven responses which are older than UCAMWEBAUTH_TIMEOUT are rejected"""
         with self.assertRaises(InvalidResponseError) as excep:
             self.client.get(reverse('raven_return'),
                             {'WLS-Response': create_wls_response(

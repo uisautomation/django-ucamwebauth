@@ -88,6 +88,13 @@ class RavenResponse(object):
         except Exception:
             raise MalformedResponseError("The url parameter is not a valid url, got %s" % tokens[5])
 
+        # Check that 'url' represents the resource currently being accessed. Note that in many environments a WAA will
+        # not be able to securely establish their own hostname and care must be taken not to end up relying on the
+        # value of the 'Host:' header from the HTTP response. It may be necessary to provide axillary configuration
+        # information to enable a WAA to derive urls safely. TODO improve the check url system
+        if self.url != setting('UCAMWEBAUTH_RETURN_URL'):
+            raise InvalidResponseError("The URL in the response does not match the URL expected")
+
         # principal: Only present if status == 200, indicates the authenticated identity of the user
         self.principal = tokens[6]
 
@@ -148,61 +155,48 @@ class RavenResponse(object):
                 raise PublicKeyNotFoundError("We do not have the public key corresponding to the key the server "
                                              "signed the response with")
 
+            # Check that the signature matches the data supplied. To check this, the WAA uses the public key identified
+            # by 'kid'. TODO move up
+            data = '!'.join(tokens[0:12])  # The data string that was signed in the WLS (everything from the
+                                           # WLS-Response except 'kid' and 'sig'
+            try:
+                verify(cert, self.sig, data.encode(), 'sha1')
+            except Exception:
+                raise InvalidResponseError("The signature for this response is not valid.")
 
-        UCAMWEBAUTH_RETURN_URL = setting('UCAMWEBAUTH_RETURN_URL')
-        UCAMWEBAUTH_AAUTH = setting('UCAMWEBAUTH_AAUTH', ['pwd', 'card'])
-        UCAMWEBAUTH_IACT = setting('UCAMWEBAUTH_IACT', False)
+            # Check that 'auth' and/or 'sso' contain values acceptable to the WAA. Simply setting 'aauth' and 'iact'
+            # values in an authentication request is not sufficient since an attacker could construct its own request.
+            # Conversely, the WAA MUST ensure that the values of 'aauth' and/or 'iact' in its authentication requests
+            # correctly reflect its requirement, to prevent the WLS sending it unacceptable responses.
 
+            UCAMWEBAUTH_AAUTH = setting('UCAMWEBAUTH_AAUTH', ['pwd'])
+            UCAMWEBAUTH_IACT = setting('UCAMWEBAUTH_IACT', False)
 
-        # Check that the URL is as expected
-        if self.url != UCAMWEBAUTH_RETURN_URL:
-            raise InvalidResponseError("The URL in the response does not match the URL expected")
-
-        # Check that the type of authentication was acceptable
-        if self.auth != "":
-            # Authentication was done recently with this auth type
-            if UCAMWEBAUTH_AAUTH is not None:
-                # if UCAMWEBAUTH_AAUTH == None, any type of authentication is acceptable
-                if self.auth not in UCAMWEBAUTH_AAUTH:
+            if self.auth != "":
+                if UCAMWEBAUTH_AAUTH is not None and self.auth not in UCAMWEBAUTH_AAUTH:
                     raise InvalidResponseError("The response used the wrong type of authentication")
-        elif self.sso != "" and not UCAMWEBAUTH_IACT:
-            # Authentication was not done recently, and that is acceptable to us
-            if UCAMWEBAUTH_IACT is not None:
+            elif self.sso != "" and not UCAMWEBAUTH_IACT:
+                # Authentication was not done recently, and that is acceptable to us
+                if UCAMWEBAUTH_IACT is not None:
 
-                # Get the list of auth types used on previous occasions and
-                # check that at least one of them is acceptable to us
-                auth_good = False
-                for auth_type in self.sso.split(','):
-                    if auth_type in UCAMWEBAUTH_AAUTH:
-                        auth_good = True
-                        break
+                    # Get the list of auth types used on previous occasions and
+                    # check that at least one of them is acceptable to us
+                    auth_good = False
+                    for auth_type in self.sso.split(','):
+                        if auth_type in UCAMWEBAUTH_AAUTH:
+                            auth_good = True
+                            break
 
-                # If none of the previous types match one we asked for, raise an error
-                if not auth_good:
-                    raise InvalidResponseError("The response used the wrong type of authentication")
-        else:
-            if UCAMWEBAUTH_IACT:
-                # We had required an interactive authentication, but didn't get one
-                raise InvalidResponseError("Interactive authentication required but not received")
+                    # If none of the previous types match one we asked for, raise an error
+                    if not auth_good:
+                        raise InvalidResponseError("The response used the wrong type of authentication")
             else:
-                # Both auth and sso are empty, which is not allowed
-                raise MalformedResponseError("No authentication types supplied")
-
-
-
-
-
-
-
-
-        # Check that the signature matches the data supplied. To check this, the WAA uses the public key identified
-        # by 'kid'. TODO move up
-        data = '!'.join(tokens[0:12]) # The data string that was signed in the WLS (everything from the WLS-Response
-                                      # except 'kid' and 'sig'
-        try:
-            verify(cert, self.sig, data.encode(), 'sha1')
-        except Exception:
-            raise InvalidResponseError("The signature for this response is not valid.")
+                if UCAMWEBAUTH_IACT:
+                    # We had required an interactive authentication, but didn't get one
+                    raise InvalidResponseError("Interactive authentication required but not received")
+                else:
+                    # Both auth and sso are empty, which is not allowed
+                    raise MalformedResponseError("No authentication types supplied")
 
     def validate(self):
         """Returns True if this represents a successful authentication otherwise returns False."""
