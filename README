@@ -96,7 +96,6 @@ wOq24EIbX5LquL9w+uvnfXw=
 Extra settings which can be used to fine tune the performance of django-ucamwebauth include: 
 
 ```python
-UCAMWEBAUTH_MAX_CLOCK_SKEW = ''
 UCAMWEBAUTH_TIMEOUT = ''
 UCAMWEBAUTH_IACT = ''
 UCAMWEBAUTH_AAUTH = ''

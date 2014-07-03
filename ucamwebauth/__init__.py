@@ -2,6 +2,7 @@ import time
 import urllib
 
 from OpenSSL.crypto import FILETYPE_PEM, load_certificate, verify
+from django.conf import settings
 
 from ucamwebauth.utils import decode_sig, setting, parse_time
 from ucamwebauth.exceptions import (MalformedResponseError, InvalidResponseError, PublicKeyNotFoundError,
@@ -68,6 +69,16 @@ class RavenResponse(object):
         except ValueError:
             raise MalformedResponseError("Issue time is not a valid time, got %s" % tokens[3])
 
+        # Check that the response is recent by comparing 'issue' with the current time. The WLS MUST and the WAA SHOULD
+        # have their clocks synchronised by NTP or a similar mechanism. Providing the WAA has access to an
+        # NTP-synchronised clock then allowing for a transmission time of 30-60 seconds is probably appropriate.
+        # Otherwise allowance must be made for the maximum expected clock skew.
+        if self.issue > time.time():
+            raise InvalidResponseError("The timestamp on the response is in the future")
+        if self.issue < time.time() - setting('UCAMWEBAUTH_TIMEOUT', 30):
+            raise InvalidResponseError("Response has timed out - issued %s, now %s" %
+                                       (time.asctime(time.gmtime(self.issue)), time.asctime()))
+
         # ident: An identifier for this response. 'ident', combined with 'issue' provides a uid for this response.
         self.ident = tokens[4]
 
@@ -112,11 +123,13 @@ class RavenResponse(object):
 
         # kid (not-empty only if 'sig' is present): A string which identifies the RSA key which was used to form the
         # signature supplied with the response. Typically these will be small integers.
-        try:
-            self.kid = int(tokens[12])
-        except ValueError:
-            raise MalformedResponseError("kid parameter must be an integer, not %s" % tokens[12])
-
+        if tokens[12] == "":
+            self.kid = None
+        else:
+            try:
+                self.kid = int(tokens[12])
+            except ValueError:
+                raise MalformedResponseError("kid parameter must be an integer, not %s" % tokens[12])
 
         # sig (not-empty only if 'status' is 200): A public-key signature of the response data constructed from the
         # entire parameter value except 'kid' and 'sig' (and their separating ':' characters) using the private key
@@ -125,27 +138,25 @@ class RavenResponse(object):
         # characters '+', '/', and '=' are replaced by '-', '.' and '_' to reduce the URL-encoding overhead.
         self.sig = decode_sig(tokens[13])
 
-
+        #TODO what happen whith other statuses?
+        if self.status == 200:
+            # Check that 'kid', corresponds to a key/certificate present in the WAA. Is the only way to check the
+            # signature. The WAA has to use the public key/certificate made available by the WLS.
+            try:
+                cert = load_certificate(FILETYPE_PEM, settings.UCAMWEBAUTH_CERTS[self.kid])
+            except KeyError:
+                raise PublicKeyNotFoundError("We do not have the public key corresponding to the key the server "
+                                             "signed the response with")
 
 
         UCAMWEBAUTH_RETURN_URL = setting('UCAMWEBAUTH_RETURN_URL')
-        UCAMWEBAUTH_MAX_CLOCK_SKEW = setting('UCAMWEBAUTH_MAX_CLOCK_SKEW', 2)
-        UCAMWEBAUTH_TIMEOUT = setting('UCAMWEBAUTH_TIMEOUT', 10)
         UCAMWEBAUTH_AAUTH = setting('UCAMWEBAUTH_AAUTH', ['pwd', 'card'])
         UCAMWEBAUTH_IACT = setting('UCAMWEBAUTH_IACT', False)
-        UCAMWEBAUTH_CERTS = setting('UCAMWEBAUTH_CERTS')
 
 
         # Check that the URL is as expected
         if self.url != UCAMWEBAUTH_RETURN_URL:
             raise InvalidResponseError("The URL in the response does not match the URL expected")
-
-        # Check that the issue time is not in the future or too far in the past:
-        if self.issue > time.time() + UCAMWEBAUTH_MAX_CLOCK_SKEW:
-            raise InvalidResponseError("The timestamp on the response is in the future")
-        if self.issue < time.time() - UCAMWEBAUTH_MAX_CLOCK_SKEW - UCAMWEBAUTH_TIMEOUT:
-            raise InvalidResponseError("Response has timed out - issued %s, now %s" %
-                                       (time.asctime(time.gmtime(self.issue)), time.asctime()))
 
         # Check that the type of authentication was acceptable
         if self.auth != "":
@@ -157,7 +168,7 @@ class RavenResponse(object):
         elif self.sso != "" and not UCAMWEBAUTH_IACT:
             # Authentication was not done recently, and that is acceptable to us
             if UCAMWEBAUTH_IACT is not None:
-                
+
                 # Get the list of auth types used on previous occasions and
                 # check that at least one of them is acceptable to us
                 auth_good = False
@@ -176,20 +187,18 @@ class RavenResponse(object):
             else:
                 # Both auth and sso are empty, which is not allowed
                 raise MalformedResponseError("No authentication types supplied")
-        # Done checking the authentication type was acceptable
 
-        # Check that the signature is correct - first get the certificate
-        try:
-            cert = load_certificate(FILETYPE_PEM, UCAMWEBAUTH_CERTS[self.kid])
-        except KeyError:
-            raise PublicKeyNotFoundError("We do not have the public key "
-                                         "corresponding to the key the server "
-                                         "signed the response with")
 
-        # Create data string used for hash http://raven.cam.ac.uk/project/waa2wls-protocol-3.0.txt
-        data = '!'.join(tokens[0:12])
-        
-        # Check that it matches
+
+
+
+
+
+
+        # Check that the signature matches the data supplied. To check this, the WAA uses the public key identified
+        # by 'kid'. TODO move up
+        data = '!'.join(tokens[0:12]) # The data string that was signed in the WLS (everything from the WLS-Response
+                                      # except 'kid' and 'sig'
         try:
             verify(cert, self.sig, data.encode(), 'sha1')
         except Exception:
