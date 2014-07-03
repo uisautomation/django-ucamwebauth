@@ -34,8 +34,7 @@ class RavenAuthBackend(object):
         if username is None:
             return None
 
-        user = self.get_user_by_name(username)
-        return user
+        return self.get_user_by_name(username)
 
     def get_user_by_name(self, username):
         """Gets a user with the specified username from the DB."""
@@ -56,8 +55,7 @@ class RavenAuthBackend(object):
             return user
 
     def get_user(self, user_id):
-        """Gets a user with the specified user ID from the DB.  For some
-        reason, this is required by django for an auth backend."""
+        """Gets the user with the specified user ID. It is required by all django auth backend implementations."""
         try:
             user = User.objects.get(pk=user_id)
         except User.DoesNotExist:

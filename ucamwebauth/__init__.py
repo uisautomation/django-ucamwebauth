@@ -1,4 +1,3 @@
-"""Base configuration for Raven login """
 import time
 import urllib
 
@@ -10,29 +9,124 @@ from ucamwebauth.exceptions import (MalformedResponseError, InvalidResponseError
 
 
 class RavenResponse(object):
-    """Represents a response from the raven server.  Contains fields for
-    version number, status, etc. and methods for checking the validity of the
-    response via the RSA signature."""
+    """Transforms a WLS-Response (http://raven.cam.ac.uk/project/waa2wls-protocol.txt) from the
+    University of Cambridge web login service (WLS) a.k.a. Raven (http://raven.cam.ac.uk/) into an object with
+    accessible variables corresponding to the response parameters"""
 
-    ver = status = msg = issue = ident = url = principal = ptags = auth = sso = life = params = kid = sig = config = \
-        None
+    ver = status = msg = issue = ident = url = principal = ptags = auth = sso = life = params = kid = sig = None
 
     STATUS = {200: 'Successful authentication',
-              410: 'User cancelled authentication',
+              410: 'The user cancelled the authentication request',
               510: 'No mutually acceptable authentication types available',
               520: 'Unsupported protocol version',
               530: 'General request parameter error',
               540: 'Interaction would be required',
-              560: 'WAA not authorised to use this WLS',
+              560: 'WAA not authorised',
               570: 'Authentication declined'}
 
     def __init__(self, response_str=None):
-        """Makes a Ravenresponse object from a reponse string passed with HTTP GET.
-        @param reponse_str The response string, normally passed as GET['WLS-Response']
+        """Creates a RavenResponse object from the response of the Web login service (WLS) of the University of
+        Cambridge
+        @param reponse_str The response string from the WLS passed as GET['WLS-Response']
         """
 
         if response_str is None:
-            raise MalformedResponseError("Version number must be integer")
+            raise MalformedResponseError("no WLS-Response")
+
+        # The WLS sends an authentication response message as follows:  First a 'encoded response string' is formed by
+        # concatenating the values of the response fields below, in the order shown, using '!' as a separator character.
+        # Parameters with no relevant value MUST be encoded as the empty string.
+        tokens = response_str.split('!')
+
+        # Check that the number of variables in the response is correct
+        if len(tokens) != 14:
+            raise MalformedResponseError("Wrong number of parameters in response: expected 14, got %d" % len(tokens))
+
+        # ver: The version of the WLS protocol in use. May be the same as the 'ver' parameter
+        # supplied in the request
+        try:
+            self.ver = int(tokens[0])
+        except ValueError:
+            raise MalformedResponseError("Version number must be an integer, not %s" % tokens[0])
+        if self.ver != 3:
+            raise MalformedResponseError("Unsupported version: %d" % self.ver)
+
+        # status: A three digit status code indicating the status of the authentication request. The list of possible
+        # statuses can be seen in the STATUS dict of the RavenResponse object.
+        try:
+            self.status = int(tokens[1])
+        except ValueError:
+            raise MalformedResponseError("Status code must be an integer, not %s" % tokens[1])
+
+        # msg (optional): A text message further describing the status of the authentication request,
+        # suitable for display to end-user.
+        self.msg = tokens[2]
+
+        # issue: The date and time that the authentication response was created.
+        try:
+            self.issue = parse_time(tokens[3])
+        except ValueError:
+            raise MalformedResponseError("Issue time is not a valid time, got %s" % tokens[3])
+
+        # ident: An identifier for this response. 'ident', combined with 'issue' provides a uid for this response.
+        self.ident = tokens[4]
+
+        # url: The value of url supplied in the authentication request and used to form the authentication response.
+        try:
+            self.url = urllib.unquote(tokens[5])
+        except Exception:
+            raise MalformedResponseError("The url parameter is not a valid url, got %s" % tokens[5])
+
+        # principal: Only present if status == 200, indicates the authenticated identity of the user
+        self.principal = tokens[6]
+
+        # ptags (optional): A potentially empty sequence of text tokens separated by ',' indicating attributes
+        # or properties of the identified principal. Possible values of this tag are not standardised and are
+        # a matter for local definition by individual WLS operators (see note below). Web application agent (WAA)
+        # SHOULD ignore values that they do not recognise.
+        self.ptags = tokens[7].split(',')
+
+        # auth (not-empty only if authentication was successfully established by interaction with the user):
+        # This indicates which authentication type was used.
+        # This value consists of a single text token as described below. TODO
+        self.auth = tokens[8]
+
+        # sso (not-empty only if 'auth' is empty): Authentication must have been established based on previous
+        # successful authentication interaction(s) with the user. This indicates which authentication types were used
+        # on these occasions. This value consists of a sequence of text tokens as described below, separated by ','.
+        self.sso = tokens[9].split(',')
+
+        # life (optional): If the user has established an authenticated 'session' with the WLS, this indicates the
+        # remaining life (in seconds) of that session. If present, a WAA SHOULD use this to establish an upper limit
+        # to the lifetime of any session that it establishes. TODO https://docs.djangoproject.com/en/dev/topics/http/sessions/#django.contrib.sessions.backends.base.SessionBase.set_expiry
+        if tokens[10] == "":
+            self.life = None
+        else:
+            try:
+                self.life = int(tokens[10])
+            except ValueError:
+                raise MalformedResponseError("Life parameter must be an integer, not %s" % tokens[10])
+
+        # params: a copy of the params parameter from the request
+        self.params = tokens[11]
+
+        # kid (not-empty only if 'sig' is present): A string which identifies the RSA key which was used to form the
+        # signature supplied with the response. Typically these will be small integers.
+        try:
+            self.kid = int(tokens[12])
+        except ValueError:
+            raise MalformedResponseError("kid parameter must be an integer, not %s" % tokens[12])
+
+
+        # sig (not-empty only if 'status' is 200): A public-key signature of the response data constructed from the
+        # entire parameter value except 'kid' and 'sig' (and their separating ':' characters) using the private key
+        # identified by 'kid', the SHA-1 hash algorithm and the 'RSASSA-PKCS1-v1_5' scheme as specified in PKCS #1 v2.1
+        # [RFC 3447] and the resulting signature encoded using the base64 scheme [RFC 1521] except that the
+        # characters '+', '/', and '=' are replaced by '-', '.' and '_' to reduce the URL-encoding overhead.
+        self.sig = decode_sig(tokens[13])
+
+
+
 
         UCAMWEBAUTH_RETURN_URL = setting('UCAMWEBAUTH_RETURN_URL')
         UCAMWEBAUTH_MAX_CLOCK_SKEW = setting('UCAMWEBAUTH_MAX_CLOCK_SKEW', 2)
@@ -41,48 +135,7 @@ class RavenResponse(object):
         UCAMWEBAUTH_IACT = setting('UCAMWEBAUTH_IACT', False)
         UCAMWEBAUTH_CERTS = setting('UCAMWEBAUTH_CERTS')
 
-        # The response is a !-separated list of variables, so split it by !
-        tokens = response_str.split('!')
 
-        # Check we have the right version
-        try:
-            self.ver = int(tokens[0])
-        except ValueError:
-            raise MalformedResponseError("Version number must be integer")
-
-        if self.ver != 3:
-            raise MalformedResponseError("Unsupported version: %d" % self.ver)
-
-        if len(tokens) != 14:
-            raise MalformedResponseError("Wrong number of parameters in response: expected 14, got %d" % len(tokens))
-        
-        # Get all the tokens from the request
-        try:
-            self.status = int(tokens[1])
-        except ValueError:
-            raise MalformedResponseError("Status code must be an integer, not %s" % tokens[1])
-        self.msg = tokens[2]
-        try:
-            self.issue = parse_time(tokens[3])
-        except ValueError:
-            raise MalformedResponseError("Issue time is not a valid Raven time, not %s" % tokens[3])
-        self.ident = tokens[4]
-        self.url = urllib.unquote(tokens[5])
-        self.principal = tokens[6]
-        self.ptags = tokens[7].split(',')
-        self.auth = tokens[8]
-        self.sso = tokens[9]
-        if tokens[10] == "":
-            self.life = None
-        else:
-            try:
-                self.life = int(tokens[10])
-            except ValueError:
-                raise MalformedResponseError("Life must be an integer, not %s" % tokens[10])
-        self.params = tokens[11]
-        self.kid = tokens[12]
-        self.sig = decode_sig(tokens[13])
-        
         # Check that the URL is as expected
         if self.url != UCAMWEBAUTH_RETURN_URL:
             raise InvalidResponseError("The URL in the response does not match the URL expected")
