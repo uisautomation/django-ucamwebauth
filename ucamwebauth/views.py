@@ -26,7 +26,14 @@ def raven_login(request):
     # Get the Raven object and return a redirect to the Raven server
     login_url = setting('UCAMWEBAUTH_LOGIN_URL')
     encoded_return_url = urllib.quote(setting('UCAMWEBAUTH_RETURN_URL'))
-    return HttpResponseSeeOther("%s?ver=%d&url=%s" % (login_url, 3, encoded_return_url))
+    desc = urllib.quote(setting('UCAMWEBAUTH_DESC', default=''))
+    aauth = urllib.quote(setting('UCAMWEBAUTH_AAUTH', default=''))
+    iact = urllib.quote(setting('UCAMWEBAUTH_IACT', default=''))
+    msg = urllib.quote(setting('UCAMWEBAUTH_MSG', default=''))
+    params = urllib.quote(setting('UCAMWEBAUTH_PARAMS', default=''))
+    fail = urllib.quote(setting('UCAMWEBAUTH_FAIL', default=''))
+    return HttpResponseSeeOther("%s?ver=%d&url=%s&desc=%s&aauth=%s&iact=%s&msg=%s&params=%s&fail=%s" %
+                                (login_url, 3, encoded_return_url, desc, aauth, iact, msg, params, fail) )
 
 
 def raven_logout(request):

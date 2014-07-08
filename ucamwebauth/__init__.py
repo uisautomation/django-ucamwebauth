@@ -128,6 +128,10 @@ class RavenResponse(object):
         # params: a copy of the params parameter from the request
         self.params = tokens[11]
 
+        # REQUIRED to be a copy of the params parameter from the request
+        if self.params != setting('UCAMWEBAUTH_PARAMS', default=''):
+            raise InvalidResponseError("The params are not equals to the request ones")
+
         # kid (not-empty only if 'sig' is present): A string which identifies the RSA key which was used to form the
         # signature supplied with the response. Typically these will be small integers.
         if tokens[12] == "":
@@ -156,7 +160,7 @@ class RavenResponse(object):
                                              "login service signed the response with")
 
             # Check that the signature matches the data supplied. To check this, the WAA uses the public key identified
-            # by 'kid'. TODO move up
+            # by 'kid'.
             data = '!'.join(tokens[0:12])  # The data string that was signed in the WLS (everything from the
                                            # WLS-Response except 'kid' and 'sig'
             try:
