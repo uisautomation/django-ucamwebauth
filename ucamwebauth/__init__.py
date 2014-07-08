@@ -145,7 +145,7 @@ class RavenResponse(object):
         # characters '+', '/', and '=' are replaced by '-', '.' and '_' to reduce the URL-encoding overhead.
         self.sig = decode_sig(tokens[13])
 
-        #TODO what happen whith other statuses?
+        #TODO what happen with other statuses?
         if self.status == 200:
             # Check that 'kid', corresponds to a key/certificate present in the WAA. Is the only way to check the
             # signature. The WAA has to use the public key/certificate made available by the WLS.

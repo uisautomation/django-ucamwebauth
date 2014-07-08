@@ -1,10 +1,7 @@
 import urllib
-
-from django.http import HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import redirect
-from django.utils.module_loading import import_by_path
-from ucamwebauth import UserNotAuthorised
 from ucamwebauth.utils import setting, HttpResponseSeeOther
 
 
@@ -14,12 +11,7 @@ def raven_return(request):
     token = request.GET['WLS-Response']
 
     # See if this is a valid token
-    try:
-        user = authenticate(response_str=token)
-    except UserNotAuthorised:
-        unauthorised_view = import_by_path(setting('UCAMWEBAUTH_NOT_AUTHORISED',
-                                                   default='ucamwebauth.views.default_unauthorised_user'))
-        return unauthorised_view(request)
+    user = authenticate(response_str=token)
 
     if user is None:
         return redirect(setting('UCAMWEBAUTH_LOGOUT_REDIRECT', default='/'))
@@ -28,10 +20,6 @@ def raven_return(request):
     
     # Redirect somewhere sensible
     return HttpResponseRedirect('/')
-
-
-def default_unauthorised_user(request):
-    return HttpResponseForbidden("Authentication successful but you are not authorised to access this site")
 
 
 def raven_login(request):

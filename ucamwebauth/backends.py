@@ -27,7 +27,9 @@ class RavenAuthBackend(object):
             return None
 
         if (setting('UCAMWEBAUTH_NOT_CURRENT', default=False) is False) and ('current' not in response.ptags):
-            raise UserNotAuthorised()
+            logger.error("%s: %s" % ("UserNotAuthorised", "Authentication successful but you are not authorised to "
+                                                          "access this site"))
+            raise UserNotAuthorised("Authentication successful but you are not authorised to access this site")
 
         username = response.principal
  

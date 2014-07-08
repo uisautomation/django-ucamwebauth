@@ -6,7 +6,7 @@ DIRNAME = os.path.dirname(__file__)
 
 from django.conf import settings
 settings.configure(
-    DEBUG=True,
+    DEBUG=False,
     DATABASES={'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'test.db', }},
     TIME_ZONE='Europe/London',
     USE_TZ=True,

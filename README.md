@@ -46,7 +46,6 @@ UCAMWEBAUTH_RETURN_URL: the URL of your app which the Raven service should
     return the user to after authentication.
 UCAMWEBAUTH_LOGOUT_REDIRECT: a string representing the URL to where the user is redirected when she logs out of the app (Default to '/').
 UCAMWEBAUTH_NOT_CURRENT: a boolean value representing if raven users that are currently not members of the university should be allowed to log in (Default to False).
-UCAMWEBAUTH_NOT_AUTHORISED: a HttpResponse object with the template or message to show to a Raven4Life user when they login if UCAMWEBAUTH_NOT_CURRENT is False
 UCAMWEBAUTH_CERTS: a dictionary including key names and their associated
     certificates which can be downloaded from the Raven project pages.
 ```
@@ -92,6 +91,21 @@ wOq24EIbX5LquL9w+uvnfXw=
 -----END CERTIFICATE-----
 """)
 ```
+
+## Errors
+
+There are four possible exceptions that can be raised using this module: MalformedResponseError, InvalidResponseError,
+and PublicKeyNotFoundError that return HTTP 500, or UserNotAuthorised that returns 403. You can catch these exceptions
+using process_exception middleware (https://docs.djangoproject.com/en/1.7/topics/http/middleware/#process_exception) to
+customize the what the user will receive as a response. The module has a default behaviour for these exceptions with
+HTTP error codes and using their corresponding templates. To use the default behaviour just add to MIDDLEWARE_CLASSES,
+the following class: 'ucamwebauth.middleware.DefaultErrorBehaviour'. You can also rewrite the <httpcode>.html templates.
+You only need to add the following lines to your own if you want to show the user the error message:
+
+{% for message in messages %}
+    {{ message }}<br/>
+{% endfor %}
+
 
 ## Additional Config Settings
 
