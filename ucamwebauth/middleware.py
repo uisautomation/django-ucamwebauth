@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.http import HttpResponseServerError, HttpResponseForbidden
-from django.template import loader, RequestContext, TemplateDoesNotExist
+from django.template import loader, RequestContext
 from ucamwebauth import MalformedResponseError, InvalidResponseError, PublicKeyNotFoundError, UserNotAuthorised
 
 

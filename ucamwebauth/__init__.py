@@ -152,8 +152,8 @@ class RavenResponse(object):
             try:
                 cert = load_certificate(FILETYPE_PEM, settings.UCAMWEBAUTH_CERTS[self.kid])
             except KeyError:
-                raise PublicKeyNotFoundError("We do not have the public key corresponding to the key the server "
-                                             "signed the response with")
+                raise PublicKeyNotFoundError("The server do not have the public key corresponding to the key the web "
+                                             "login service signed the response with")
 
             # Check that the signature matches the data supplied. To check this, the WAA uses the public key identified
             # by 'kid'. TODO move up
@@ -175,14 +175,14 @@ class RavenResponse(object):
             if self.auth != "":
                 if UCAMWEBAUTH_AAUTH is not None and self.auth not in UCAMWEBAUTH_AAUTH:
                     raise InvalidResponseError("The response used the wrong type of authentication")
-            elif self.sso != "" and not UCAMWEBAUTH_IACT:
+            elif self.sso != [""] and not UCAMWEBAUTH_IACT:
                 # Authentication was not done recently, and that is acceptable to us
                 if UCAMWEBAUTH_IACT is not None:
 
                     # Get the list of auth types used on previous occasions and
                     # check that at least one of them is acceptable to us
                     auth_good = False
-                    for auth_type in self.sso.split(','):
+                    for auth_type in self.sso:
                         if auth_type in UCAMWEBAUTH_AAUTH:
                             auth_good = True
                             break

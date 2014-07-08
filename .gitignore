@@ -1,4 +1,5 @@
 *.pyc
 .idea/
-/build
-/dist
+dist/*
+.DS_Store
+django_ucamwebauth.egg-info/*

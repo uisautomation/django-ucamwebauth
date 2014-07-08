@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from distutils.core import setup
+from setuptools import find_packages
 
 setup(
     name='django-ucamwebauth',
@@ -11,8 +12,7 @@ setup(
     license='MIT',
     author='Information Systems Group, University Information Services, University of Cambridge',
     author_email='raven-support@cam.ac.uk',
-    maintainer='Information Systems Group, University Information Services, University of Cambridge',
-    maintainer_email='raven-support@cam.ac.uk',
-    packages=['ucamwebauth'],
+    packages=find_packages(),
+    include_package_data=True,
     install_requires=['pyOpenSSL'],
 )
