@@ -1,5 +1,6 @@
 *.pyc
-.idea/
-dist/*
+.idea
+dist
 .DS_Store
-django_ucamwebauth.egg-info/*
+django_ucamwebauth.egg-info
+MANIFEST
