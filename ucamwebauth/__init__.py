@@ -6,7 +6,7 @@ from django.conf import settings
 
 from ucamwebauth.utils import decode_sig, setting, parse_time
 from ucamwebauth.exceptions import (MalformedResponseError, InvalidResponseError, PublicKeyNotFoundError,
-                                    UserNotAuthorised)
+                                    UserNotAuthorised, OtherStatusCode)
 
 
 class RavenResponse(object):
@@ -39,18 +39,24 @@ class RavenResponse(object):
         # Parameters with no relevant value MUST be encoded as the empty string.
         tokens = response_str.split('!')
 
-        # Check that the number of variables in the response is correct
-        if len(tokens) != 14:
-            raise MalformedResponseError("Wrong number of parameters in response: expected 14, got %d" % len(tokens))
-
         # ver: The version of the WLS protocol in use. May be the same as the 'ver' parameter
         # supplied in the request
         try:
             self.ver = int(tokens[0])
         except ValueError:
             raise MalformedResponseError("Version number must be an integer, not %s" % tokens[0])
-        if self.ver != 3:
+        if not 4 > self.ver > 0:
             raise MalformedResponseError("Unsupported version: %d" % self.ver)
+
+        if self.ver == 3:
+            versioni = 0
+        else:
+            versioni = 1
+
+        # Check that the number of parameters in the response is correct
+        if len(tokens) != (14-versioni):
+            raise MalformedResponseError("Wrong number of parameters in response: expected %d, got %d" %
+                                         ((14-versioni), len(tokens)))
 
         # status: A three digit status code indicating the status of the authentication request. The list of possible
         # statuses can be seen in the STATUS dict of the RavenResponse object.
@@ -58,6 +64,9 @@ class RavenResponse(object):
             self.status = int(tokens[1])
         except ValueError:
             raise MalformedResponseError("Status code must be an integer, not %s" % tokens[1])
+
+        if self.status not in self.STATUS:
+            raise InvalidResponseError("Status returned not known")
 
         # msg (optional): A text message further describing the status of the authentication request,
         # suitable for display to end-user.
@@ -82,6 +91,9 @@ class RavenResponse(object):
         # ident: An identifier for this response. 'ident', combined with 'issue' provides a uid for this response.
         self.ident = tokens[4]
 
+        if self.ident == "":
+            raise MalformedResponseError("Empty ID")
+
         # url: The value of url supplied in the authentication request and used to form the authentication response.
         try:
             self.url = urllib.unquote(tokens[5])
@@ -102,31 +114,31 @@ class RavenResponse(object):
         # or properties of the identified principal. Possible values of this tag are not standardised and are
         # a matter for local definition by individual WLS operators (see note below). Web application agent (WAA)
         # SHOULD ignore values that they do not recognise.
-        self.ptags = tokens[7].split(',')
+        if versioni == 0:
+            self.ptags = tokens[7].split(',')
 
         # auth (not-empty only if authentication was successfully established by interaction with the user):
         # This indicates which authentication type was used.
         # This value consists of a single text token as described below. TODO
-        self.auth = tokens[8]
+        self.auth = tokens[8-versioni]
 
         # sso (not-empty only if 'auth' is empty): Authentication must have been established based on previous
         # successful authentication interaction(s) with the user. This indicates which authentication types were used
         # on these occasions. This value consists of a sequence of text tokens as described below, separated by ','.
-        self.sso = tokens[9].split(',')
+        self.sso = tokens[9-versioni].split(',')
 
         # life (optional): If the user has established an authenticated 'session' with the WLS, this indicates the
         # remaining life (in seconds) of that session. If present, a WAA SHOULD use this to establish an upper limit
-        # to the lifetime of any session that it establishes. TODO https://docs.djangoproject.com/en/dev/topics/http/sessions/#django.contrib.sessions.backends.base.SessionBase.set_expiry
-        if tokens[10] == "":
-            self.life = None
-        else:
+        # to the lifetime of any session that it establishes.
+        # TODO https://docs.djangoproject.com/en/dev/topics/http/sessions/#django.contrib.sessions.backends.base.SessionBase.set_expiry
+        if tokens[10-versioni] != "":
             try:
-                self.life = int(tokens[10])
+                self.life = int(tokens[10-versioni])
             except ValueError:
-                raise MalformedResponseError("Life parameter must be an integer, not %s" % tokens[10])
+                raise MalformedResponseError("Life parameter must be an integer, not %s" % tokens[10-versioni])
 
         # params: a copy of the params parameter from the request
-        self.params = tokens[11]
+        self.params = tokens[11-versioni]
 
         # REQUIRED to be a copy of the params parameter from the request
         if self.params != setting('UCAMWEBAUTH_PARAMS', default=''):
@@ -134,20 +146,19 @@ class RavenResponse(object):
 
         # kid (not-empty only if 'sig' is present): A string which identifies the RSA key which was used to form the
         # signature supplied with the response. Typically these will be small integers.
-        if tokens[12] == "":
-            self.kid = None
-        else:
+        if tokens[12-versioni] != "":
             try:
-                self.kid = int(tokens[12])
+                self.kid = int(tokens[12-versioni])
             except ValueError:
-                raise MalformedResponseError("kid parameter must be an integer, not %s" % tokens[12])
+                raise MalformedResponseError("kid parameter must be an integer, not %s" % tokens[12-versioni])
 
         # sig (not-empty only if 'status' is 200): A public-key signature of the response data constructed from the
         # entire parameter value except 'kid' and 'sig' (and their separating ':' characters) using the private key
         # identified by 'kid', the SHA-1 hash algorithm and the 'RSASSA-PKCS1-v1_5' scheme as specified in PKCS #1 v2.1
         # [RFC 3447] and the resulting signature encoded using the base64 scheme [RFC 1521] except that the
         # characters '+', '/', and '=' are replaced by '-', '.' and '_' to reduce the URL-encoding overhead.
-        self.sig = decode_sig(tokens[13])
+        if tokens[13-versioni] != "":
+            self.sig = decode_sig(tokens[13-versioni])
 
         #TODO what happen with other statuses?
         if self.status == 200:
@@ -161,12 +172,17 @@ class RavenResponse(object):
 
             # Check that the signature matches the data supplied. To check this, the WAA uses the public key identified
             # by 'kid'.
-            data = '!'.join(tokens[0:12])  # The data string that was signed in the WLS (everything from the
-                                           # WLS-Response except 'kid' and 'sig'
+            data = '!'.join(tokens[0:(12-versioni)])  # The data string that was signed in the WLS (everything from the
+                                                      # WLS-Response except 'kid' and 'sig'
             try:
                 verify(cert, self.sig, data.encode(), 'sha1')
             except Exception:
                 raise InvalidResponseError("The signature for this response is not valid.")
+
+            # Check that principal is not empty
+
+            if self.principal == "" or self.principal == None:
+                raise MalformedResponseError("The username is not present in the WLS response")
 
             # Check that 'auth' and/or 'sso' contain values acceptable to the WAA. Simply setting 'aauth' and 'iact'
             # values in an authentication request is not sufficient since an attacker could construct its own request.

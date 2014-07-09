@@ -1,7 +1,7 @@
 import logging
 from django.contrib.auth.models import User
 from ucamwebauth import RavenResponse
-from ucamwebauth.exceptions import UserNotAuthorised
+from ucamwebauth.exceptions import UserNotAuthorised, OtherStatusCode
 from ucamwebauth.utils import setting
 
 logger = logging.getLogger(__name__)
@@ -24,17 +24,16 @@ class RavenAuthBackend(object):
             raise e
 
         if not response.validate():
-            return None
+            raise OtherStatusCode("The WLS returned status %d: %s" %
+                                  (response.status, response.STATUS[response.status]))
 
-        if (setting('UCAMWEBAUTH_NOT_CURRENT', default=False) is False) and ('current' not in response.ptags):
+        if (response.ver == 3) and (setting('UCAMWEBAUTH_NOT_CURRENT', default=False) is False) and \
+                ('current' not in response.ptags):
             logger.error("%s: %s" % ("UserNotAuthorised", "Authentication successful but you are not authorised to "
                                                           "access this site"))
             raise UserNotAuthorised("Authentication successful but you are not authorised to access this site")
 
         username = response.principal
- 
-        if username is None:
-            return None
 
         return self.get_user_by_name(username)
 

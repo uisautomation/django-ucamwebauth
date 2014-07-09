@@ -16,3 +16,8 @@ class PublicKeyNotFoundError(Exception):
 class UserNotAuthorised(Exception):
     """Raised if the user is not current and the administrator does not want to authorised these type of users"""
     pass
+
+
+class OtherStatusCode(Exception):
+    """Raised if the status code is not 200"""
+    pass
