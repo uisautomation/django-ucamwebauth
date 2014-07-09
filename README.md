@@ -1,8 +1,11 @@
-[![Build Status](https://travis-ci.org/abrahammartin/django-ucamwebauth.svg?branch=master)](https://travis-ci.org/abrahammartin/django-ucamwebauth)
+[![Build Status](https://travis-ci.org/abrahammartin/django-ucamwebauth.svg?branch=master)]
+(https://travis-ci.org/abrahammartin/django-ucamwebauth)
 
 # Introduction
 
-django-ucamwebauth is a library which provides use of Cambridge University's [Raven authentication](http://raven.cam.ac.uk/) for [Django](https://www.djangoproject.com/). It provides a Django authentication backend which can be added to `AUTHENTICATION_BACKENDS` in the Django `settings` module.
+django-ucamwebauth is a library which provides use of Cambridge University's 
+[Raven authentication](http://raven.cam.ac.uk/) for [Django](https://www.djangoproject.com/). It provides a Django 
+authentication backend which can be added to `AUTHENTICATION_BACKENDS` in the Django `settings` module.
 
 ## Use
 
@@ -35,19 +38,22 @@ urlpatterns = patterns('',
 
 ## Minimum Config Settings
 
-You then need to configure the app's settings. Raven has a live and test environments, the URL and certificate details are given below.
+You then need to configure the app's settings. Raven has a live and test environments, the URL and certificate details 
+are given below.
 
 There are four minimum config settings:
 
 ```python
 UCAMWEBAUTH_LOGIN_URL: a string representing the URL for the Raven login redirect.
 UCAMWEBAUTH_LOGOUT_URL: a string representing the logout URL for Raven.
-UCAMWEBAUTH_RETURN_URL: the URL of your app which the Raven service should
-    return the user to after authentication.
-UCAMWEBAUTH_LOGOUT_REDIRECT: a string representing the URL to where the user is redirected when she logs out of the app (Default to '/').
-UCAMWEBAUTH_NOT_CURRENT: a boolean value representing if raven users that are currently not members of the university should be allowed to log in (Default to False).
-UCAMWEBAUTH_CERTS: a dictionary including key names and their associated
-    certificates which can be downloaded from the Raven project pages.
+UCAMWEBAUTH_RETURN_URL: the URL of your app which the Raven service should return the user to after authentication.
+UCAMWEBAUTH_LOGOUT_REDIRECT: a string representing the URL to where the user is redirected when she logs out of the app
+    (Default to '/').
+UCAMWEBAUTH_NOT_CURRENT: a boolean value representing if raven users that are currently not members of the university
+    should be allowed to log in (Default to False).
+UCAMWEBAUTH_CERTS: a dictionary including key names and their associated certificates which can be downloaded from the
+    Raven project pages.
+UCAMWEBAUTH_TIMEOUT: An integer with the time (in seconds) that has to pass to consider an authentication timed out.
 ```
 
 The final major setting is:
@@ -56,7 +62,8 @@ The final major setting is:
 UCAMWEBAUTH_CREATE_USER = False
 ```
 
-This defaults to False, but when True, allows the autocreation of users who have been successfully authenticated by Raven, but do not exist in the local database. The user is created with set_unusable_password().
+This defaults to False, but when True, allows the autocreation of users who have been successfully authenticated by
+Raven, but do not exist in the local database. The user is created with set_unusable_password().
 
 An example, referencing the Raven test environment is given below:
 
@@ -99,7 +106,8 @@ and PublicKeyNotFoundError that return HTTP 500, or UserNotAuthorised that retur
 using process_exception middleware (https://docs.djangoproject.com/en/1.7/topics/http/middleware/#process_exception) to
 customize the what the user will receive as a response. The module has a default behaviour for these exceptions with
 HTTP error codes and using their corresponding templates. To use the default behaviour just add to MIDDLEWARE_CLASSES,
-the following class: 'ucamwebauth.middleware.DefaultErrorBehaviour'. You can also rewrite the <httpcode>.html templates.
+the following class: 'ucamwebauth.middleware.DefaultErrorBehaviour'. You can also rewrite the
+ucamwebauth_<httpcode>.html templates.
 You only need to add the following lines to your own if you want to show the user the error message:
 
 {% for message in messages %}
@@ -107,14 +115,31 @@ You only need to add the following lines to your own if you want to show the use
 {% endfor %}
 
 
-## Additional Config Settings
+## Authentication request parameters
 
-Extra settings which can be used to fine tune the performance of django-ucamwebauth include: 
+This parameters are sent with the authentication request and allows the developer to tune the request to fit their app:
 
 ```python
-UCAMWEBAUTH_TIMEOUT = ''
-UCAMWEBAUTH_IACT = ''
-UCAMWEBAUTH_AAUTH = ''
+UCAMWEBAUTH_DESC: A text description of the resource requesting authentication which may be displayed to the end-user
+    to further identify the resource to which his/her identity is being disclosed. Can be omitted.
+UCAMWEBAUTH_IACT: The value 'yes' requires that a re-authentication exchange takes place with the user. This could be
+    used prior to a sensitive transaction in an attempt to ensure that a previously authenticated user is still present
+    at the browser. The value 'no' requires that the authentication request will only succeed if the user's identity
+    can be returned without interacting with the user. This could be used as an optimisation to take advantage of any
+    existing authentication but without actively soliciting one. If omitted or empty, then a previously established
+    identity may be returned if the WLS supports doing so, and if not then the user will be prompted as necessary.
+UCAMWEBAUTH_MSG: Text describing why authentication is being requested on this occasion which may be displayed to the
+    end-user. Can be omitted.
+UCAMWEBAUTH_PARAMS: Data that will be returned unaltered to the WAA in any 'authentication response message' issued as
+    a result of this request. This could be used to carry the identity of the resource originally requested or other
+    WAA state, or to associate authentication requests with their eventual replies. When returned, this data will be
+    protected by the digital signature applied to the authentication response message but nothing else is done to
+    ensure the integrity or confidentiality of this data - the WAA MUST take responsibility for this if necessary.
+UCAMWEBAUTH_FAIL = If this parameter is 'yes' and the outcome of the request is anything other than success (i.e. the
+    status code would be anything other than 200) then the WLS MUST return an informative error to the user and MUST
+    not redirect back to the WAA. Setting this makes it easier to implement WAAs at the expense of a loss of
+    flexibility in error handling.
 ```
 
-The details of these can be found in the Raven WLS protocol documentation, [here](http://raven.cam.ac.uk/project/waa2wls-protocol.txt).
+The details of these can be found in the Raven WLS protocol documentation,
+[here](http://raven.cam.ac.uk/project/waa2wls-protocol.txt).
