@@ -108,7 +108,14 @@ class RavenResponse(object):
             raise InvalidResponseError("The URL in the response does not match the URL expected")
 
         # principal: Only present if status == 200, indicates the authenticated identity of the user
-        self.principal = tokens[6]
+        if self.status == 200:
+            if tokens[6] != "":
+                self.principal = tokens[6]
+            else:
+                raise InvalidResponseError("The username is not present in the WLS response")
+        else:
+            if tokens[6] != "":
+                raise InvalidResponseError("The username should not be present if the status code is not 200")
 
         # ptags (optional): A potentially empty sequence of text tokens separated by ',' indicating attributes
         # or properties of the identified principal. Possible values of this tag are not standardised and are
@@ -118,8 +125,7 @@ class RavenResponse(object):
             self.ptags = tokens[7].split(',')
 
         # auth (not-empty only if authentication was successfully established by interaction with the user):
-        # This indicates which authentication type was used.
-        # This value consists of a single text token as described below. TODO
+        # This indicates which authentication type was used. v3 only supports 'pwd'
         self.auth = tokens[8-versioni]
 
         # sso (not-empty only if 'auth' is empty): Authentication must have been established based on previous
@@ -158,15 +164,19 @@ class RavenResponse(object):
         # [RFC 3447] and the resulting signature encoded using the base64 scheme [RFC 1521] except that the
         # characters '+', '/', and '=' are replaced by '-', '.' and '_' to reduce the URL-encoding overhead.
         if tokens[13-versioni] != "":
+            if self.kid is None:
+                raise InvalidResponseError("kid must be present if signature is present")
             self.sig = decode_sig(tokens[13-versioni])
+        else:
+            if self.status == 200:
+                raise InvalidResponseError("Signature must be present if status is 200")
 
-        #TODO what happen with other statuses?
-        if self.status == 200:
-            # Check that 'kid', corresponds to a key/certificate present in the WAA. Is the only way to check the
-            # signature. The WAA has to use the public key/certificate made available by the WLS.
+        # Check that 'kid', corresponds to a key/certificate present in the WAA. Is the only way to check the
+        # signature. The WAA has to use the public key/certificate made available by the WLS.
+        if (self.sig is not None) or (self.status == 200):
             try:
                 cert = load_certificate(FILETYPE_PEM, settings.UCAMWEBAUTH_CERTS[self.kid])
-            except KeyError:
+            except Exception:
                 raise PublicKeyNotFoundError("The server do not have the public key corresponding to the key the web "
                                              "login service signed the response with")
 
@@ -179,41 +189,36 @@ class RavenResponse(object):
             except Exception:
                 raise InvalidResponseError("The signature for this response is not valid.")
 
-            # Check that principal is not empty
-
-            if self.principal == "" or self.principal == None:
-                raise MalformedResponseError("The username is not present in the WLS response")
+        if self.status == 200:
 
             # Check that 'auth' and/or 'sso' contain values acceptable to the WAA. Simply setting 'aauth' and 'iact'
             # values in an authentication request is not sufficient since an attacker could construct its own request.
             # Conversely, the WAA MUST ensure that the values of 'aauth' and/or 'iact' in its authentication requests
             # correctly reflect its requirement, to prevent the WLS sending it unacceptable responses.
 
-            UCAMWEBAUTH_AAUTH = setting('UCAMWEBAUTH_AAUTH', ['pwd'])
-            UCAMWEBAUTH_IACT = setting('UCAMWEBAUTH_IACT', False)
+            UCAMWEBAUTH_IACT = setting('UCAMWEBAUTH_IACT', '')
 
+            # the authentication was successfully establish by interaction with the user
             if self.auth != "":
-                if UCAMWEBAUTH_AAUTH is not None and self.auth not in UCAMWEBAUTH_AAUTH:
-                    raise InvalidResponseError("The response used the wrong type of authentication")
-            elif self.sso != [""] and not UCAMWEBAUTH_IACT:
-                # Authentication was not done recently, and that is acceptable to us
-                if UCAMWEBAUTH_IACT is not None:
+                # auth only supports 'pwd' in current version, therefore we compare it with 'pwd' only
+                # If more are supported in the future, a setting will be added to specify which ones the WAA wants to
+                # support and check that auth and sso match any element in this list.
+                if self.auth != "pwd":
+                    raise InvalidResponseError("The response used the wrong type of authentication (auth)")
 
-                    # Get the list of auth types used on previous occasions and
-                    # check that at least one of them is acceptable to us
-                    auth_good = False
-                    for auth_type in self.sso:
-                        if auth_type in UCAMWEBAUTH_AAUTH:
-                            auth_good = True
-                            break
+                if UCAMWEBAUTH_IACT == 'no':
+                    # We had required a non-interactive authentication, but didn't get one
+                    raise InvalidResponseError("Non-interactive authentication required but not received")
 
-                    # If none of the previous types match one we asked for, raise an error
-                    if not auth_good:
-                        raise InvalidResponseError("The response used the wrong type of authentication")
+            # authentication was established on a previous interaction(s) with the user
             else:
-                if UCAMWEBAUTH_IACT:
-                    # We had required an interactive authentication, but didn't get one
-                    raise InvalidResponseError("Interactive authentication required but not received")
+                if self.sso != [""]:
+                    if self.sso != ["pwd"]:
+                        raise InvalidResponseError("The response used the wrong type of authentication (sso)")
+
+                    if UCAMWEBAUTH_IACT == 'yes':
+                        # We had required an interactive authentication, but didn't get one
+                        raise InvalidResponseError("Interactive authentication required but not received")
                 else:
                     # Both auth and sso are empty, which is not allowed
                     raise MalformedResponseError("No authentication types supplied")

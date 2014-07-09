@@ -116,8 +116,6 @@ This parameters are sent with the authentication request and allows the develope
 ```python
 UCAMWEBAUTH_DESC: A text description of the resource requesting authentication which may be displayed to the end-user
     to further identify the resource to which his/her identity is being disclosed. Can be omitted.
-UCAMWEBAUTH_AAUTH: A text string representing the types of authentication that will satisfy this request. Current
-    version of the web login service only supports 'pwd', any other input will raise an error. Can be omitted.
 UCAMWEBAUTH_IACT: The value 'yes' requires that a re-authentication exchange takes place with the user. This could be
     used prior to a sensitive transaction in an attempt to ensure that a previously authenticated user is still present
     at the browser. The value 'no' requires that the authentication request will only succeed if the user's identity

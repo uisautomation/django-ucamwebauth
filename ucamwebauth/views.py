@@ -27,13 +27,13 @@ def raven_login(request):
     login_url = setting('UCAMWEBAUTH_LOGIN_URL')
     encoded_return_url = urllib.quote(setting('UCAMWEBAUTH_RETURN_URL'))
     desc = urllib.quote(setting('UCAMWEBAUTH_DESC', default=''))
-    aauth = urllib.quote(setting('UCAMWEBAUTH_AAUTH', default=''))
+    # aauth is ignored as v3 only supports 'pwd', therefore we do not need it.
     iact = urllib.quote(setting('UCAMWEBAUTH_IACT', default=''))
     msg = urllib.quote(setting('UCAMWEBAUTH_MSG', default=''))
     params = urllib.quote(setting('UCAMWEBAUTH_PARAMS', default=''))
     fail = urllib.quote(setting('UCAMWEBAUTH_FAIL', default=''))
-    return HttpResponseSeeOther("%s?ver=%d&url=%s&desc=%s&aauth=%s&iact=%s&msg=%s&params=%s&fail=%s" %
-                                (login_url, 3, encoded_return_url, desc, aauth, iact, msg, params, fail) )
+    return HttpResponseSeeOther("%s?ver=%d&url=%s&desc=%s&iact=%s&msg=%s&params=%s&fail=%s" %
+                                (login_url, 3, encoded_return_url, desc, iact, msg, params, fail) )
 
 
 def raven_logout(request):
