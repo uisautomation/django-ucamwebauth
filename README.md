@@ -105,14 +105,23 @@ There are four possible exceptions that can be raised using this module: Malform
 and PublicKeyNotFoundError that return HTTP 500, or UserNotAuthorised that returns 403. You can catch these exceptions
 using process_exception middleware (https://docs.djangoproject.com/en/1.7/topics/http/middleware/#process_exception) to
 customize the what the user will receive as a response. The module has a default behaviour for these exceptions with
-HTTP error codes and using their corresponding templates. To use the default behaviour just add to MIDDLEWARE_CLASSES,
-the following class: 'ucamwebauth.middleware.DefaultErrorBehaviour'. You can also rewrite the
-ucamwebauth_<httpcode>.html templates.
-You only need to add the following lines to your own if you want to show the user the error message:
+HTTP error codes and using their corresponding templates. To use the default behaviour just add:
+ 
+```python
+MIDDLEWARE_CLASSES = (
+    ...
+    'ucamwebauth.middleware.DefaultErrorBehaviour'
+)
+```
 
+You can also rewrite the ucamwebauth_<httpcode>.html templates. You only need to add the following lines to your own if 
+you want to show the user the error message:
+
+```python
 {% for message in messages %}
     {{ message }}<br/>
 {% endfor %}
+```
 
 
 ## Authentication request parameters
