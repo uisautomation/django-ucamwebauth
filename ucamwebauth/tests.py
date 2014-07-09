@@ -1,29 +1,20 @@
-"""ucamwebauth.tests
-
-Contains tests for the ucamwebauth application
-"""
-
-from datetime import datetime, timedelta
 from base64 import b64encode
+from datetime import datetime, timedelta
 from string import maketrans
 import urllib
+from OpenSSL.crypto import load_privatekey, FILETYPE_PEM, sign
 import requests
-from OpenSSL.crypto import FILETYPE_PEM, load_privatekey, sign
-
-from django.conf import settings
 from django.test import TestCase
 from django.test.client import Client
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
-
-
 from ucamwebauth import InvalidResponseError, MalformedResponseError, setting, UserNotAuthorised
+from ucamwebauth.exceptions import OtherStatusCode
 
 RAVEN_TEST_USER = 'test0001'
 RAVEN_TEST_PWD = 'test'
 RAVEN_NEW_USER = 'test0002'
-
-RAVEN_RETURN_URL = setting('UCAMWEBAUTH_RETURN_URL')
+RAVEN_FORLIVE_USER = 'test0500'
 
 GOOD_PRIV_KEY_PEM = """-----BEGIN RSA PRIVATE KEY-----
 MIICWwIBAAKBgQC4RYvbSGb42EEEXzsz93Mubo0fdWZ7UJ0HoZXQch5XIR0Zl8AN
@@ -62,31 +53,31 @@ cbvAhow217X9V0dVerEOKxnNYspXRrh36h7k4mQA+sDq
 
 def create_wls_response(raven_ver='3', raven_status='200', raven_msg='',
                         raven_issue=datetime.utcnow().strftime('%Y%m%dT%H%M%SZ'),
-                        raven_id='1347296083-8278-2', 
-                        raven_url=RAVEN_RETURN_URL,
+                        raven_id='1347296083-8278-2',
+                        raven_url=setting('UCAMWEBAUTH_RETURN_URL'),
                         raven_principal=RAVEN_TEST_USER, raven_ptags='current',
                         raven_auth='pwd', raven_sso='', raven_life='36000',
                         raven_params='', raven_kid='901',
                         raven_key_pem=GOOD_PRIV_KEY_PEM):
-    """Creates a valid WLS Response as the Raven test server would 
+    """Creates a valid WLS Response as the Raven test server would
     using keys from https://raven.cam.ac.uk/project/keys/demo_server/
     """
-    raven_pkey = load_privatekey(FILETYPE_PEM, raven_key_pem) 
+    raven_pkey = load_privatekey(FILETYPE_PEM, raven_key_pem)
     trans_table = maketrans("+/=", "-._")
 
     # This is the data which is signed by Raven with their private key
     # Note data consists of full payload with exception of kid and sig
     # source: http://raven.cam.ac.uk/project/waa2wls-protocol-3.0.txt
-    wls_response_data = [raven_ver, raven_status, raven_msg, 
-                         raven_issue, raven_id, raven_url, 
+    wls_response_data = [raven_ver, raven_status, raven_msg,
+                         raven_issue, raven_id, raven_url,
                          raven_principal, raven_ptags, raven_auth,
                          raven_sso, raven_life, raven_params]
-    
+
     data = '!'.join(wls_response_data)
     raven_sig = b64encode(sign(raven_pkey, data, 'sha1'))
 
     # Full WLS-Response also includes the Raven-variant b64encoded sig
-    # and the requisite Key ID which has been used for the signing 
+    # and the requisite Key ID which has been used for the signing
     # process
     wls_response_data.append(raven_kid)
     wls_response_data.append(str(raven_sig).translate(trans_table))
@@ -95,45 +86,46 @@ def create_wls_response(raven_ver='3', raven_status='200', raven_msg='',
 
 
 class RavenTestCase(TestCase):
-    """RavenTestCase
-    Authentication tests for the Raven service
-    """
-
     fixtures = ['users.json']
 
     def __init__(self, *args, **kwargs):
         self.client = Client()
         super(RavenTestCase, self).__init__(*args, **kwargs)
 
-    def do_login(self):
-        response = requests.post('https://demo.raven.cam.ac.uk/auth/authenticate2.html',
-                                 {'url': settings.UCAMWEBAUTH_RETURN_URL,
-                                  'userid': 'test0001', 'pwd': 'test',
-                                  'ver': '3'}, allow_redirects=False)
+    def get_wls_response(self, raven_user=RAVEN_TEST_USER, raven_pwd=RAVEN_TEST_PWD, raven_ver='3',
+                         raven_url=setting('UCAMWEBAUTH_RETURN_URL'), raven_desc='',
+                         raven_aauth='pwd', raven_iact='', raven_msg='',
+                         raven_params='', raven_fail='', cancel=False):
+        # This request only test when raven_aauth is pwd and raven_iact is omitted
+        if cancel:
+            response = requests.post('https://demo.raven.cam.ac.uk/auth/authenticate2.html',
+                                     {'userid': raven_user, 'pwd': raven_pwd, 'ver': raven_ver, 'url': raven_url,
+                                      'params': raven_params, 'fail': raven_fail, 'cancel': 'Cancel'},
+                                     allow_redirects=False)
+        else:
+            response = requests.post('https://demo.raven.cam.ac.uk/auth/authenticate2.html',
+                                     {'userid': raven_user, 'pwd': raven_pwd, 'ver': raven_ver, 'url': raven_url,
+                                      'params': raven_params, 'fail': raven_fail},
+                                     allow_redirects=False)
         self.assertEqual(303, response.status_code)
-        redirect_url = urllib.unquote(response.headers['location'])
-        self.client.get(reverse('raven_return'), {'WLS-Response': redirect_url.split('WLS-Response=')[1]})
-
-    def test_real_raven_test_service(self):
-        self.do_login()
-        self.assertIn('_auth_user_id', self.client.session)
+        return urllib.unquote(response.headers['location']).split('WLS-Response=')[1]
 
     def test_login_raven_not_local(self):
         """Tests login of user via raven, not in database"""
         with self.settings(UCAMWEBAUTH_CREATE_USER=False):
-            self.client.get(reverse('raven_return'),
-                            {'WLS-Response': create_wls_response(raven_principal=RAVEN_NEW_USER)})
+            self.client.get(reverse('raven_return'), {'WLS-Response': self.get_wls_response(raven_user=RAVEN_NEW_USER)})
         self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_login_raven_local(self):
         """Tests login of user who exists in database"""
-        self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response()})
+        with self.settings(UCAMWEBAUTH_CREATE_USER=False):
+            self.client.get(reverse('raven_return'), {'WLS-Response': self.get_wls_response()})
         self.assertIn('_auth_user_id', self.client.session)
 
     def test_login_invalid_version_fails(self):
         with self.assertRaises(MalformedResponseError) as excep:
-            self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response(raven_ver='1')})
-        self.assertEqual(str(excep.exception), 'Unsupported version: 1')
+            self.client.get(reverse('raven_return'), {'WLS-Response': self.get_wls_response(raven_ver='4')})
+        self.assertEqual(str(excep.exception), 'Unsupported version: 4')
         self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_login_invalid_version_fails_with_template(self):
@@ -147,8 +139,8 @@ class RavenTestCase(TestCase):
                     'django.middleware.clickjacking.XFrameOptionsMiddleware',
                     'ucamwebauth.middleware.DefaultErrorBehaviour',
                 )):
-            response = self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response(raven_ver='1')})
-        self.assertContains(response, 'Unsupported version: 1', status_code=500)
+            response = self.client.get(reverse('raven_return'), {'WLS-Response': self.get_wls_response(raven_ver='4')})
+        self.assertContains(response, 'Unsupported version: 4', status_code=500)
         self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_login_issue_future_fails(self):
@@ -201,7 +193,7 @@ class RavenTestCase(TestCase):
         false, user is not created in database"""
         with self.settings(UCAMWEBAUTH_CREATE_USER=False):
             self.client.get(reverse('raven_return'),
-                            {'WLS-Response': create_wls_response(raven_principal=RAVEN_NEW_USER)})
+                            {'WLS-Response': self.get_wls_response(raven_user=RAVEN_NEW_USER)})
             with self.assertRaises(User.DoesNotExist):
                 User.objects.get(username=RAVEN_NEW_USER)
             self.assertNotIn('_auth_user_id', self.client.session)
@@ -211,13 +203,13 @@ class RavenTestCase(TestCase):
         creates valid user in database"""
         with self.settings(UCAMWEBAUTH_CREATE_USER=True):
             self.client.get(reverse('raven_return'),
-                            {'WLS-Response': create_wls_response(raven_principal=RAVEN_NEW_USER)})
+                            {'WLS-Response': self.get_wls_response(raven_user=RAVEN_NEW_USER)})
             user = User.objects.get(username=RAVEN_NEW_USER)
             self.assertFalse(user.has_usable_password())
 
     def test_logout_redirect_url(self):
         """Tests the logout redirection"""
-        self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response()})
+        self.client.get(reverse('raven_return'), {'WLS-Response': self.get_wls_response()})
         self.assertIn('_auth_user_id', self.client.session)
         with self.settings(UCAMWEBAUTH_LOGOUT_REDIRECT='http://www.cam.ac.uk/'):
             response = self.client.get(reverse('raven_logout'), follow=True)
@@ -227,7 +219,8 @@ class RavenTestCase(TestCase):
     def test_not_allow_raven_for_life(self):
         """Test Raven for life accounts credentials"""
         with self.assertRaises(UserNotAuthorised) as excep:
-            self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response(raven_ptags='')})
+            self.client.get(reverse('raven_return'),
+                            {'WLS-Response': self.get_wls_response(raven_user=RAVEN_FORLIVE_USER)})
         self.assertEqual(str(excep.exception), 'Authentication successful but you are not authorised to access this '
                                                'site')
 
@@ -243,11 +236,21 @@ class RavenTestCase(TestCase):
                     'django.middleware.clickjacking.XFrameOptionsMiddleware',
                     'ucamwebauth.middleware.DefaultErrorBehaviour',
                 )):
-            response = self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response(raven_ptags='')})
+            response = self.client.get(reverse('raven_return'),
+                                       {'WLS-Response': self.get_wls_response(raven_user=RAVEN_FORLIVE_USER)})
         self.assertContains(response, 'Authentication successful but you are not authorised to access this site',
                             status_code=403)
 
     def test_allow_raven_for_life(self):
-        with self.settings(UCAMWEBAUTH_NOT_CURRENT=True):
-            self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response(raven_ptags='')})
+        with self.settings(UCAMWEBAUTH_NOT_CURRENT=True, UCAMWEBAUTH_CREATE_USER=True):
+            self.client.get(reverse('raven_return'),
+                            {'WLS-Response': self.get_wls_response(raven_user=RAVEN_FORLIVE_USER)})
             self.assertIn('_auth_user_id', self.client.session)
+
+    def test_user_cancel_wls_auth(self):
+        with self.assertRaises(OtherStatusCode) as excep:
+            response = self.client.get(reverse('raven_return'),
+                                       {'WLS-Response': self.get_wls_response(cancel=True)})
+        self.assertEqual(str(excep.exception),
+                         'The WLS returned status 410: The user cancelled the authentication request')
+        self.assertNotIn('_auth_user_id', self.client.session)
