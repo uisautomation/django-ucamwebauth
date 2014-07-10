@@ -55,6 +55,7 @@ UCAMWEBAUTH_CERTS: a dictionary including key names and their associated certifi
     Raven project pages.
 UCAMWEBAUTH_TIMEOUT: An integer with the time (in seconds) that has to pass to consider an authentication timed out
     (Default to 30).
+UCAMWEBAUTH_REDIRECT_AFTER_LOGIN: The url where you want to redirect the user after login (Default to '/').
 ```
 
 The final major setting is:
@@ -146,7 +147,7 @@ UCAMWEBAUTH_PARAMS: Data that will be returned unaltered to the WAA in any 'auth
     WAA state, or to associate authentication requests with their eventual replies. When returned, this data will be
     protected by the digital signature applied to the authentication response message but nothing else is done to
     ensure the integrity or confidentiality of this data - the WAA MUST take responsibility for this if necessary.
-UCAMWEBAUTH_FAIL = If this parameter is 'yes' and the outcome of the request is anything other than success (i.e. the
+UCAMWEBAUTH_FAIL: If this parameter is 'yes' and the outcome of the request is anything other than success (i.e. the
     status code would be anything other than 200) then the WLS MUST return an informative error to the user and MUST
     not redirect back to the WAA. Setting this makes it easier to implement WAAs at the expense of a loss of
     flexibility in error handling.

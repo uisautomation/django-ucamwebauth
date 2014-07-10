@@ -3,6 +3,7 @@ import calendar
 
 from string import maketrans
 from base64 import b64decode
+from urlparse import parse_qs
 
 from django.conf import settings
 from django.http import HttpResponseRedirect
@@ -32,6 +33,15 @@ def parse_time(time_string):
     since the epoch.
     @exception ValueError if the time is not a valid Raven time"""
     return calendar.timegm(time.strptime(time_string, "%Y%m%dT%H%M%SZ"))
+
+
+def get_next_from_wls_response(response_str):
+    tokens = response_str.split('!')
+    params = parse_qs(tokens[11]) if tokens[0] == '3' else parse_qs(tokens[10])
+    if 'next' in params:
+        return params['next'][0]
+    else:
+        return None
 
 
 class HttpResponseSeeOther(HttpResponseRedirect):

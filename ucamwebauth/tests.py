@@ -259,13 +259,6 @@ class RavenTestCase(TestCase):
             user = User.objects.get(username=RAVEN_NEW_USER)
             self.assertFalse(user.has_usable_password())
 
-    def test_params_not_in_return(self):
-        with self.settings(UCAMWEBAUTH_PARAMS="exampleparams"):
-            with self.assertRaises(InvalidResponseError) as excep:
-                self.client.get(reverse('raven_return'), {'WLS-Response': self.get_wls_response()})
-        self.assertEqual(str(excep.exception), "The params are not equals to the request ones")
-        self.assertNotIn('_auth_user_id', self.client.session)
-
     def test_wrong_kid(self):
         with self.assertRaises(MalformedResponseError) as excep:
             self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response(raven_kid='error')})

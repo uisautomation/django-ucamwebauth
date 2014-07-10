@@ -1,5 +1,6 @@
 import time
-import urllib
+from urlparse import parse_qs
+from urllib import unquote
 
 from OpenSSL.crypto import FILETYPE_PEM, load_certificate, verify
 from django.conf import settings
@@ -97,7 +98,7 @@ class RavenResponse(object):
 
         # url: The value of url supplied in the authentication request and used to form the authentication response.
         try:
-            self.url = urllib.unquote(tokens[5])
+            self.url = unquote(tokens[5])
             urlvalidator = URLValidator() # From django 1.7 URLValidator accepts schemes=['https', 'http']
             urlvalidator(self.url)
         except Exception:
@@ -147,11 +148,14 @@ class RavenResponse(object):
                 raise MalformedResponseError("Life parameter must be an integer, not %s" % tokens[10-versioni])
 
         # params: a copy of the params parameter from the request
-        self.params = tokens[11-versioni]
+        try:
+            self.params = parse_qs(tokens[11-versioni])
+        except Exception:
+            raise MalformedResponseError("The params field contains wrong characters: %s" % tokens[11-versioni])
 
         # REQUIRED to be a copy of the params parameter from the request
-        if self.params != setting('UCAMWEBAUTH_PARAMS', default=''):
-            raise InvalidResponseError("The params are not equals to the request ones")
+        # if self.params != setting('UCAMWEBAUTH_PARAMS', default=''):
+        #     raise InvalidResponseError("The params are not equals to the request ones")
 
         # kid (not-empty only if 'sig' is present): A string which identifies the RSA key which was used to form the
         # signature supplied with the response. Typically these will be small integers.
