@@ -102,10 +102,11 @@ wOq24EIbX5LquL9w+uvnfXw=
 ## Errors
 
 There are four possible exceptions that can be raised using this module: MalformedResponseError, InvalidResponseError,
-and PublicKeyNotFoundError that return HTTP 500, or UserNotAuthorised that returns 403. You can catch these exceptions
-using process_exception middleware (https://docs.djangoproject.com/en/1.7/topics/http/middleware/#process_exception) to
-customize the what the user will receive as a response. The module has a default behaviour for these exceptions with
-HTTP error codes and using their corresponding templates. To use the default behaviour just add:
+PublicKeyNotFoundError, and OtherStatusCode that return HTTP 500, or UserNotAuthorised that returns 403. You can catch 
+these exceptions using process_exception middleware 
+(https://docs.djangoproject.com/en/1.7/topics/http/middleware/#process_exception) to customize the what the user will 
+receive as a response. The module has a default behaviour for these exceptions with HTTP error codes and using their 
+corresponding templates. To use the default behaviour just add:
  
 ```python
 MIDDLEWARE_CLASSES = (

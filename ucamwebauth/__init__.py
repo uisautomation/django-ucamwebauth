@@ -3,6 +3,7 @@ import urllib
 
 from OpenSSL.crypto import FILETYPE_PEM, load_certificate, verify
 from django.conf import settings
+from django.core.validators import URLValidator
 
 from ucamwebauth.utils import decode_sig, setting, parse_time
 from ucamwebauth.exceptions import (MalformedResponseError, InvalidResponseError, PublicKeyNotFoundError,
@@ -97,6 +98,8 @@ class RavenResponse(object):
         # url: The value of url supplied in the authentication request and used to form the authentication response.
         try:
             self.url = urllib.unquote(tokens[5])
+            urlvalidator = URLValidator(schemes=['https', 'http'])
+            urlvalidator(self.url)
         except Exception:
             raise MalformedResponseError("The url parameter is not a valid url, got %s" % tokens[5])
 

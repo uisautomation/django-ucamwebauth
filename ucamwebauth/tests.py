@@ -8,7 +8,8 @@ from django.test import TestCase
 from django.test.client import Client
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
-from ucamwebauth import InvalidResponseError, MalformedResponseError, setting, UserNotAuthorised
+from ucamwebauth import InvalidResponseError, MalformedResponseError, setting, UserNotAuthorised, RavenResponse, \
+    PublicKeyNotFoundError
 from ucamwebauth.exceptions import OtherStatusCode
 
 RAVEN_TEST_USER = 'test0001'
@@ -58,7 +59,7 @@ def create_wls_response(raven_ver='3', raven_status='200', raven_msg='',
                         raven_principal=RAVEN_TEST_USER, raven_ptags='current',
                         raven_auth='pwd', raven_sso='', raven_life='36000',
                         raven_params='', raven_kid='901',
-                        raven_key_pem=GOOD_PRIV_KEY_PEM):
+                        raven_key_pem=GOOD_PRIV_KEY_PEM, raven_sig_input=True):
     """Creates a valid WLS Response as the Raven test server would
     using keys from https://raven.cam.ac.uk/project/keys/demo_server/
     """
@@ -80,7 +81,10 @@ def create_wls_response(raven_ver='3', raven_status='200', raven_msg='',
     # and the requisite Key ID which has been used for the signing
     # process
     wls_response_data.append(raven_kid)
-    wls_response_data.append(str(raven_sig).translate(trans_table))
+    if raven_sig_input:
+        wls_response_data.append(str(raven_sig).translate(trans_table))
+    else:
+        wls_response_data.append('')
 
     return '!'.join(wls_response_data)
 
@@ -152,6 +156,32 @@ class RavenTestCase(TestCase):
         self.assertEqual(str(excep.exception), 'The timestamp on the response is in the future')
         self.assertNotIn('_auth_user_id', self.client.session)
 
+    def test_wrong_status_code(self):
+        with self.assertRaises(InvalidResponseError) as excep:
+            self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response(raven_status='100')})
+        self.assertEqual(str(excep.exception), "Status returned not known")
+        self.assertNotIn('_auth_user_id', self.client.session)
+        with self.assertRaises(MalformedResponseError) as excep:
+            self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response(raven_status='abc')})
+        self.assertEqual(str(excep.exception), "Status code must be an integer, not abc")
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_wrong_num_args(self):
+        with self.assertRaises(MalformedResponseError) as excep:
+            self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response().replace('!200!!', '!200!')})
+        self.assertEqual(str(excep.exception), "Wrong number of parameters in response: expected 14, got 13")
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_wrong_no_wlsresponse(self):
+        with self.assertRaises(MalformedResponseError) as excep:
+            self.client.get(reverse('raven_return'), {})
+        self.assertEqual(str(excep.exception), "no WLS-Response")
+        self.assertNotIn('_auth_user_id', self.client.session)
+        with self.assertRaises(MalformedResponseError) as excep:
+            RavenResponse()
+        self.assertEqual(str(excep.exception), "no WLS-Response")
+        self.assertNotIn('_auth_user_id', self.client.session)
+
     def test_login_issue_future_fails_with_template(self):
         """Tests that Raven responses issued in the future fail validation"""
         with self.settings(
@@ -180,6 +210,28 @@ class RavenTestCase(TestCase):
         self.assertTrue(str(excep.exception).startswith('Response has timed out'))
         self.assertNotIn('_auth_user_id', self.client.session)
 
+    def test_wrong_date(self):
+        with self.assertRaises(MalformedResponseError) as excep:
+            self.client.get(reverse('raven_return'),
+                            {'WLS-Response': create_wls_response(raven_issue="error")})
+        self.assertTrue(str(excep.exception).startswith("Issue time is not a valid time, got error"))
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_wrong_return_url(self):
+        with self.assertRaises(MalformedResponseError) as excep:
+            self.client.get(reverse('raven_return'),
+                            {'WLS-Response': create_wls_response(raven_url="error")})
+        self.assertTrue(str(excep.exception).startswith("The url parameter is not a valid url, got error"))
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_username_when_not_status_200(self):
+        with self.assertRaises(InvalidResponseError) as excep:
+            self.client.get(reverse('raven_return'),
+                            {'WLS-Response': create_wls_response(raven_status="510")})
+        self.assertTrue(str(excep.exception).startswith("The username should not be present if the status code is "
+                                                        "not 200"))
+        self.assertNotIn('_auth_user_id', self.client.session)
+
     def test_login_wrong_private_key_fails(self):
         """Tests that Raven responses with invalid key fail"""
         with self.assertRaises(InvalidResponseError) as excep:
@@ -206,6 +258,59 @@ class RavenTestCase(TestCase):
                             {'WLS-Response': self.get_wls_response(raven_user=RAVEN_NEW_USER)})
             user = User.objects.get(username=RAVEN_NEW_USER)
             self.assertFalse(user.has_usable_password())
+
+    def test_params_not_in_return(self):
+        with self.settings(UCAMWEBAUTH_PARAMS="exampleparams"):
+            with self.assertRaises(InvalidResponseError) as excep:
+                self.client.get(reverse('raven_return'), {'WLS-Response': self.get_wls_response()})
+        self.assertEqual(str(excep.exception), "The params are not equals to the request ones")
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_wrong_kid(self):
+        with self.assertRaises(MalformedResponseError) as excep:
+            self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response(raven_kid='error')})
+        self.assertEqual(str(excep.exception), "kid parameter must be an integer, not error")
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_empty_kid(self):
+        with self.assertRaises(InvalidResponseError) as excep:
+            self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response(raven_kid='')})
+        self.assertEqual(str(excep.exception), "kid must be present if signature is present")
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_unknown_kid(self):
+        with self.assertRaises(PublicKeyNotFoundError) as excep:
+            self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response(raven_kid='100')})
+        self.assertEqual(str(excep.exception), "The server do not have the public key corresponding to the key the web "
+                                               "login service signed the response with")
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_no_auth_no_sso(self):
+        with self.assertRaises(MalformedResponseError) as excep:
+            self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response(raven_auth='',
+                                                                                          raven_sso='')})
+        self.assertEqual(str(excep.exception), "No authentication types supplied")
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_unknown_sso(self):
+        with self.assertRaises(InvalidResponseError) as excep:
+            self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response(raven_auth='',
+                                                                                          raven_sso='card')})
+        self.assertEqual(str(excep.exception), "The response used the wrong type of authentication (sso)")
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_unknown_auth(self):
+        with self.assertRaises(InvalidResponseError) as excep:
+            self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response(raven_auth='card',
+                                                                                          raven_sso='')})
+        self.assertEqual(str(excep.exception), "The response used the wrong type of authentication (auth)")
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_empty_signature(self):
+        with self.assertRaises(InvalidResponseError) as excep:
+            self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response(raven_sig_input=False)})
+        self.assertEqual(str(excep.exception), "Signature must be present if status is 200")
+        self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_logout_redirect_url(self):
         """Tests the logout redirection"""

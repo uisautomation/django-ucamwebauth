@@ -2,13 +2,17 @@ import urllib
 from django.http import HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import redirect
+from ucamwebauth import MalformedResponseError
 from ucamwebauth.utils import setting, HttpResponseSeeOther
 
 
 def raven_return(request):
     # Get the token which the Raven server sent us - this should really
     # have a try/except around it to catch KeyError
-    token = request.GET['WLS-Response']
+    try:
+        token = request.GET['WLS-Response']
+    except Exception:
+        raise MalformedResponseError("no WLS-Response")
 
     # See if this is a valid token
     user = authenticate(response_str=token)
