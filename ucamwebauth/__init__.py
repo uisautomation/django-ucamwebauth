@@ -98,7 +98,7 @@ class RavenResponse(object):
         # url: The value of url supplied in the authentication request and used to form the authentication response.
         try:
             self.url = urllib.unquote(tokens[5])
-            urlvalidator = URLValidator(schemes=['https', 'http'])
+            urlvalidator = URLValidator() # From django 1.7 URLValidator accepts schemes=['https', 'http']
             urlvalidator(self.url)
         except Exception:
             raise MalformedResponseError("The url parameter is not a valid url, got %s" % tokens[5])
