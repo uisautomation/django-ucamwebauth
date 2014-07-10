@@ -50,10 +50,11 @@ UCAMWEBAUTH_RETURN_URL: the URL of your app which the Raven service should retur
 UCAMWEBAUTH_LOGOUT_REDIRECT: a string representing the URL to where the user is redirected when she logs out of the app
     (Default to '/').
 UCAMWEBAUTH_NOT_CURRENT: a boolean value representing if raven users that are currently not members of the university
-    should be allowed to log in (Default to False).
+    should be allowed to log in (Default to False). More info: http://www.ucs.cam.ac.uk/accounts/ravenleaving
 UCAMWEBAUTH_CERTS: a dictionary including key names and their associated certificates which can be downloaded from the
     Raven project pages.
-UCAMWEBAUTH_TIMEOUT: An integer with the time (in seconds) that has to pass to consider an authentication timed out.
+UCAMWEBAUTH_TIMEOUT: An integer with the time (in seconds) that has to pass to consider an authentication timed out
+    (Default to 30).
 ```
 
 The final major setting is:
@@ -101,10 +102,10 @@ wOq24EIbX5LquL9w+uvnfXw=
 
 ## Errors
 
-There are four possible exceptions that can be raised using this module: MalformedResponseError, InvalidResponseError,
+There are five possible exceptions that can be raised using this module: MalformedResponseError, InvalidResponseError,
 PublicKeyNotFoundError, and OtherStatusCode that return HTTP 500, or UserNotAuthorised that returns 403. You can catch 
 these exceptions using process_exception middleware 
-(https://docs.djangoproject.com/en/1.7/topics/http/middleware/#process_exception) to customize the what the user will 
+(https://docs.djangoproject.com/en/1.7/topics/http/middleware/#process_exception) to customize what the user will 
 receive as a response. The module has a default behaviour for these exceptions with HTTP error codes and using their 
 corresponding templates. To use the default behaviour just add:
  
@@ -115,7 +116,7 @@ MIDDLEWARE_CLASSES = (
 )
 ```
 
-You can also rewrite the ucamwebauth_<httpcode>.html templates. You only need to add the following lines to your own if 
+You can also rewrite the ucamwebauth_\<httpcode\>.html templates. You only need to add the following lines to your own if 
 you want to show the user the error message:
 
 ```python
