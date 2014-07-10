@@ -43,7 +43,7 @@ are given below.
 
 There are four minimum config settings:
 
-```python
+```
 UCAMWEBAUTH_LOGIN_URL: a string representing the URL for the Raven login redirect.
 UCAMWEBAUTH_LOGOUT_URL: a string representing the logout URL for Raven.
 UCAMWEBAUTH_RETURN_URL: the URL of your app which the Raven service should return the user to after authentication.
@@ -129,7 +129,7 @@ you want to show the user the error message:
 
 This parameters are sent with the authentication request and allows the developer to tune the request to fit their app:
 
-```python
+```
 UCAMWEBAUTH_DESC: A text description of the resource requesting authentication which may be displayed to the end-user
     to further identify the resource to which his/her identity is being disclosed. Can be omitted.
 UCAMWEBAUTH_IACT: The value 'yes' requires that a re-authentication exchange takes place with the user. This could be
