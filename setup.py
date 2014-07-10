@@ -15,4 +15,13 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=['pyOpenSSL'],
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Environment :: Web Environment',
+        'Framework :: Django',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+    ],
 )
