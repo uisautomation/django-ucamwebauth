@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-export PYBUILD_NAME=django-stronghold
+export PYBUILD_NAME=django-ucamwebauth
 
 %:
 	dh $@ --with python2 --buildsystem=pybuild
