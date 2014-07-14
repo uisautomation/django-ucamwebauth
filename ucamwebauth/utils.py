@@ -36,6 +36,10 @@ def parse_time(time_string):
 
 
 def get_next_from_wls_response(response_str):
+    """ Returns the value of the variable 'next' inside the parameter 'params' of the response
+    :param response_str: The WLS response
+    :return: the value of the 'next' variable
+    """
     tokens = response_str.split('!')
     params = parse_qs(tokens[11]) if tokens[0] == '3' else parse_qs(tokens[10])
     if 'next' in params:

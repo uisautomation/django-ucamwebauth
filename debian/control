@@ -7,5 +7,5 @@ Standards-Version: 3.9.1
 
 Package: python-django-ucamwebauth
 Architecture: all
-Depends: python-django (>=1.6), ${misc:Depends}, ${python:Depends}
+Depends: python-django (>=1.6), python-requests, python-openssl, ${misc:Depends}, ${python:Depends}
 Description: A Django authentication backend for Ucam-WebAuth a.k.a. Raven

@@ -7,8 +7,6 @@ from ucamwebauth.utils import setting, HttpResponseSeeOther, get_next_from_wls_r
 
 
 def raven_return(request):
-    # Get the token which the Raven server sent us - this should really
-    # have a try/except around it to catch KeyError
     try:
         token = request.GET['WLS-Response']
     except Exception:

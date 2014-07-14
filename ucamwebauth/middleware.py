@@ -6,7 +6,9 @@ from ucamwebauth import MalformedResponseError, InvalidResponseError, PublicKeyN
 
 
 class DefaultErrorBehaviour():
-
+    """ A middleware that catches django-ucamwebauth exceptions and show HTTP 500 or HTTP 403 error messages,
+    depending of the error. Furthermore, it uses templates that can be rewritten by a developer.
+    """
     def process_exception(self, request, exception):
         if exception.__class__ == MalformedResponseError or \
                 exception.__class__ == InvalidResponseError or \
