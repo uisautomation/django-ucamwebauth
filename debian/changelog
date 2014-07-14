@@ -1,0 +1,5 @@
+django-ucamwebauth (1.0-1) unstable; urgency=low
+
+  * Initial debianisation
+
+ -- Information Systems Group, University Information Services, University of Cambridge <raven-support@cam.ac.uk>  Fri, 11 Jul 2014 12:08:38 +0100
