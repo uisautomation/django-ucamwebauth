@@ -1,5 +1,9 @@
-django-ucamwebauth (1.0-1) unstable; urgency=low
+django-ucamwebauth (1.0) unstable; urgency=low
 
+  [Abraham Martin]
   * Initial debianisation
+  [Matthew Vernon]
+  * Run tests by hand, rather than using pybuild
+  * Fix some lintian errors
 
- -- Information Systems Group, University Information Services, University of Cambridge <raven-support@cam.ac.uk>  Fri, 11 Jul 2014 12:08:38 +0100
+ -- Matthew Vernon <mcv21@cam.ac.uk>  Tue, 15 Jul 2014 17:02:34 +0100

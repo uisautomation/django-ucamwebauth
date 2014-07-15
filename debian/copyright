@@ -1,14 +1,12 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: django-ucamwebauth
-Upstream-Contact: Information Systems, University Information Service, University of Cambridge <raven-support@cam.ac.uk>
+Upstream-Contact: UIS Raven Support <raven-support@ucs.cam.ac.uk>
 Source: https://git.csx.cam.ac.uk/x/ucs/raven/django-ucamwebauth.git
 
 Files: *
-Copyright: Copyright (c) 2014, Information Systems, University Information Service, University of Cambridge
-and individual contributors.
+Copyright: Copyright (c) 2014, University of Cambridge and individual contributors.
 License: MIT
- Copyright (c) 2014, Information Systems, University Information Service, University of Cambridge
- and individual contributors.
+ Copyright (c) 2014, University of Cambridge and individual contributors.
  .
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the

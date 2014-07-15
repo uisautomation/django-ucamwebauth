@@ -1,11 +1,15 @@
 Source: django-ucamwebauth
-Maintainer: Information Systems Group, University Information Services, University of Cambridge <raven-support@cam.ac.uk>
+Maintainer: UIS Raven Support <raven-support@ucs.cam.ac.uk>
+Uploaders: Matthew Vernon <mcv21@cam.ac.uk>,
+	   Abraham Martin <amc203@cam.ac.uk>
 Section: python
 Priority: optional
-Build-Depends: python-setuptools, python-all (>= 2.6.6-3), debhelper (>=9), python-django (>=1.6)
-Standards-Version: 3.9.1
+Build-Depends: python-setuptools, python-all (>= 2.6.6-3), debhelper (>=9), python-django (>=1.6), python-requests
+Standards-Version: 3.9.4
 
 Package: python-django-ucamwebauth
 Architecture: all
 Depends: python-django (>=1.6), python-requests, python-openssl, ${misc:Depends}, ${python:Depends}
-Description: A Django authentication backend for Ucam-WebAuth a.k.a. Raven
+Description: University of Cambridge Web Authentication module for Django
+ This package provides a django authentication back-end to the
+ University of Cambridge Web Authentication system.
