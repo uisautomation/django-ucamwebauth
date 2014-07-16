@@ -33,15 +33,17 @@ def raven_return(request):
 def raven_login(request):
     # Get the Raven object and return a redirect to the Raven server
     login_url = setting('UCAMWEBAUTH_LOGIN_URL')
-    encoded_return_url = urllib.quote(setting('UCAMWEBAUTH_RETURN_URL'))
-    desc = urllib.quote(setting('UCAMWEBAUTH_DESC', default=''))
+    return_url = setting('UCAMWEBAUTH_RETURN_URL')
+    desc = setting('UCAMWEBAUTH_DESC', default='')
     # aauth is ignored as v3 only supports 'pwd', therefore we do not need it.
-    iact = urllib.quote(setting('UCAMWEBAUTH_IACT', default=''))
-    msg = urllib.quote(setting('UCAMWEBAUTH_MSG', default=''))
-    params = urllib.quote('next=' + request.GET['next'])
-    fail = urllib.quote(setting('UCAMWEBAUTH_FAIL', default=''))
-    return HttpResponseSeeOther("%s?ver=%d&url=%s&desc=%s&iact=%s&msg=%s&params=%s&fail=%s" %
-                                (login_url, 3, encoded_return_url, desc, iact, msg, params, fail) )
+    iact = setting('UCAMWEBAUTH_IACT', default='')
+    msg = setting('UCAMWEBAUTH_MSG', default='')
+    params = urllib.urlencode([('next', request.GET['next'])])
+    fail = setting('UCAMWEBAUTH_FAIL', default='')
+    msg = urllib.urlencode([('ver', 3), ('url', return_url), ('desc', desc),
+                            ('iact', iact), ('msg', msg), ('params', params),
+                            ('fail', fail)])
+    return HttpResponseSeeOther("%s?%s" % (login_url, msg) )
 
 
 def raven_logout(request):

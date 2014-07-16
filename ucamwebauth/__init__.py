@@ -38,8 +38,12 @@ class RavenResponse(object):
 
         # The WLS sends an authentication response message as follows:  First a 'encoded response string' is formed by
         # concatenating the values of the response fields below, in the order shown, using '!' as a separator character.
+        # If the characters '!'  or '%' appear in any
+        # field value they MUST be replaced by their %-encoded representation
+        # before concatenation.
         # Parameters with no relevant value MUST be encoded as the empty string.
-        tokens = response_str.split('!')
+        rawtokens = response_str.split('!')
+        tokens = map(unquote, rawtokens)
 
         # ver: The version of the WLS protocol in use. May be the same as the 'ver' parameter
         # supplied in the request
@@ -98,7 +102,7 @@ class RavenResponse(object):
 
         # url: The value of url supplied in the authentication request and used to form the authentication response.
         try:
-            self.url = unquote(tokens[5])
+            self.url = tokens[5]
             urlvalidator = URLValidator() # From django 1.7 URLValidator accepts schemes=['https', 'http']
             urlvalidator(self.url)
         except Exception:
@@ -189,7 +193,7 @@ class RavenResponse(object):
 
             # Check that the signature matches the data supplied. To check this, the WAA uses the public key identified
             # by 'kid'.
-            data = '!'.join(tokens[0:(12-versioni)])  # The data string that was signed in the WLS (everything from the
+            data = '!'.join(rawtokens[0:(12-versioni)])  # The data string that was signed in the WLS (everything from the
                                                       # WLS-Response except 'kid' and 'sig'
             try:
                 verify(cert, self.sig, data.encode(), 'sha1')

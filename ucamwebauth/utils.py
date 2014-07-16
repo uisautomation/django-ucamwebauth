@@ -3,7 +3,7 @@ import calendar
 
 from string import maketrans
 from base64 import b64decode
-from urlparse import parse_qs
+from urlparse import parse_qs, unquote
 
 from django.conf import settings
 from django.http import HttpResponseRedirect
@@ -40,7 +40,7 @@ def get_next_from_wls_response(response_str):
     :param response_str: The WLS response
     :return: the value of the 'next' variable
     """
-    tokens = response_str.split('!')
+    tokens = map(unquote, response_str.split('!'))
     params = parse_qs(tokens[11]) if tokens[0] == '3' else parse_qs(tokens[10])
     if 'next' in params:
         return params['next'][0]
