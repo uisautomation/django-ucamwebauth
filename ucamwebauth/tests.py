@@ -2,6 +2,7 @@ from base64 import b64encode
 from datetime import datetime, timedelta
 from string import maketrans
 import urllib
+from urlparse import urlparse, parse_qs
 from OpenSSL.crypto import load_privatekey, FILETYPE_PEM, sign
 import requests
 from django.test import TestCase
@@ -11,6 +12,7 @@ from django.contrib.auth.models import User
 from ucamwebauth import InvalidResponseError, MalformedResponseError, setting, UserNotAuthorised, RavenResponse, \
     PublicKeyNotFoundError
 from ucamwebauth.exceptions import OtherStatusCode
+from ucamwebauth.utils import get_next_from_wls_response
 
 RAVEN_TEST_USER = 'test0001'
 RAVEN_TEST_PWD = 'test'
@@ -51,6 +53,8 @@ cbvAhow217X9V0dVerEOKxnNYspXRrh36h7k4mQA+sDq
 -----END RSA PRIVATE KEY-----
 """
 
+def wls_response_escape(x):
+    return x.replace('%', '%25').replace('!', '%21')
 
 def create_wls_response(raven_ver='3', raven_status='200', raven_msg='',
                         raven_issue=datetime.utcnow().strftime('%Y%m%dT%H%M%SZ'),
@@ -86,7 +90,7 @@ def create_wls_response(raven_ver='3', raven_status='200', raven_msg='',
     else:
         wls_response_data.append('')
 
-    return '!'.join(wls_response_data)
+    return '!'.join(map(wls_response_escape, wls_response_data))
 
 
 class RavenTestCase(TestCase):
@@ -352,3 +356,25 @@ class RavenTestCase(TestCase):
         self.assertEqual(str(excep.exception),
                          'The WLS returned status 410: The user cancelled the authentication request')
         self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_params(self):
+        testparams = { 'this': ['that%21%25!+/'] }
+        raw = self.get_wls_response(
+            raven_params=urllib.urlencode(testparams, doseq=True))
+        r = RavenResponse(raw)
+        self.assertEqual(r.params, testparams)
+
+    def test_get_next(self):
+        testparams = { 'next': ['http://foo.example/!++!%2F/'] }
+        raw = self.get_wls_response(
+            raven_params=urllib.urlencode(testparams, doseq=True))
+        next = get_next_from_wls_response(raw)
+        self.assertEqual(next, testparams['next'][0])
+
+    def test_next_param(self):
+        testnext = 'http://foo.example/!++!%2F/'
+        response = self.client.get(reverse('raven_login'), {'next': testnext})
+        self.assertEqual(
+            parse_qs(parse_qs(urlparse(response['Location']).query)
+                     ['params'][0])['next'][0],
+            testnext)
