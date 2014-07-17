@@ -4,7 +4,8 @@ Uploaders: Matthew Vernon <mcv21@cam.ac.uk>,
 	   Abraham Martin <amc203@cam.ac.uk>
 Section: python
 Priority: optional
-Build-Depends: python-setuptools, python-all (>= 2.6.6-3), debhelper (>=9), python-django (>=1.6), python-requests
+Build-Depends: python-setuptools, python-all (>= 2.6.6-3), debhelper (>=9),
+  python-django (>=1.6), python-requests, python-markdown
 Standards-Version: 3.9.4
 
 Package: python-django-ucamwebauth
