@@ -1,12 +1,13 @@
 import logging
-from django.contrib.auth.models import User
+from django.contrib.auth.backends import RemoteUserBackend
 from ucamwebauth import RavenResponse
 from ucamwebauth.exceptions import UserNotAuthorised, OtherStatusCode
 from ucamwebauth.utils import setting
 
 logger = logging.getLogger(__name__)
 
-class RavenAuthBackend(object):
+# We inherit the automatic-user-creation code from RemoteUserBackend.
+class RavenAuthBackend(RemoteUserBackend):
     """An authentication backend for django that uses Raven.  To use, add
     'ucamwebauth.backends.RavenAuthBackend' to AUTHENTICATION_BACKENDS
     in your django settings.py."""
@@ -33,34 +34,9 @@ class RavenAuthBackend(object):
                                                           "access this site"))
             raise UserNotAuthorised("Authentication successful but you are not authorised to access this site")
 
-        username = response.principal
+        return super(RavenAuthBackend, self).authenticate(response.principal)
 
-        return self.get_user_by_name(username)
-
-    def get_user_by_name(self, username):
-        """Gets a user with the specified username from the DB."""
-        try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
-            logger.debug("Successfully authenticated as %s in Raven, but that user does not exist in Django" % username)
-
-            if setting('UCAMWEBAUTH_CREATE_USER', default=False) is True:
-                logger.debug("Creating user for %s" % username)
-                return User.objects.create_user(username=username)
-            else:
-                logger.debug("User %s not created" % username)
-
-            return None
-        else:
-            logger.debug("%s successfully authenticated via Raven" % username)
-            return user
-
-    def get_user(self, user_id):
-        """Gets the user with the specified user ID. It is required by all django auth backend implementations."""
-        try:
-            user = User.objects.get(pk=user_id)
-        except User.DoesNotExist:
-            logger.debug("No such user: %s" % user_id)
-            return None
-        else:
-            return user
+    # Backwards compatibility: honour UCAMWEBAUTH_CREATE_USER.
+    @property
+    def create_unknown_user(self):
+        return setting('UCAMWEBAUTH_CREATE_USER', default=False)
