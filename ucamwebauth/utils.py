@@ -3,8 +3,10 @@ import calendar
 
 from string import maketrans
 from base64 import b64decode
-from urlparse import parse_qs, unquote
-
+try:
+    from urlparse import parse_qs, unquote
+except ImportError:
+    from urllib.parse import parse_qs, unquote
 from django.conf import settings
 from django.http import HttpResponseRedirect
 

@@ -1,5 +1,8 @@
 import time
-from urlparse import parse_qs
+try:
+    from urlparse import parse_qs
+except ImportError:
+    from urllib.parse import parse_qs
 from urllib import unquote
 
 from OpenSSL.crypto import FILETYPE_PEM, load_certificate, verify
