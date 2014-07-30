@@ -80,7 +80,7 @@ def create_wls_response(raven_ver='3', raven_status='200', raven_msg='',
                          raven_sso, raven_life, raven_params]
 
     data = '!'.join(wls_response_data)
-    raven_sig = b64encode(sign(raven_pkey, data, 'sha1'))
+    raven_sig = b64encode(sign(raven_pkey, data.encode(), 'sha1'))
 
     # Full WLS-Response also includes the Raven-variant b64encoded sig
     # and the requisite Key ID which has been used for the signing

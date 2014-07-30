@@ -46,7 +46,7 @@ class RavenResponse(object):
         # before concatenation.
         # Parameters with no relevant value MUST be encoded as the empty string.
         rawtokens = response_str.split('!')
-        tokens = map(unquote, rawtokens)
+        tokens = list(map(unquote, rawtokens)) # return a list for python3 compatiblity
 
         # ver: The version of the WLS protocol in use. May be the same as the 'ver' parameter
         # supplied in the request
