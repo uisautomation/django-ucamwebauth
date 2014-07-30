@@ -4,7 +4,8 @@ import calendar
 from string import maketrans
 from base64 import b64decode
 try:
-    from urlparse import parse_qs, unquote
+    from urlparse import parse_qs
+    from urllib import unquote
 except ImportError:
     from urllib.parse import parse_qs, unquote
 from django.conf import settings

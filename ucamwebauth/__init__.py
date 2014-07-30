@@ -1,9 +1,9 @@
 import time
 try:
     from urlparse import parse_qs
+    from urllib import unquote
 except ImportError:
-    from urllib.parse import parse_qs
-from urllib import unquote
+    from urllib.parse import parse_qs, unquote
 
 from OpenSSL.crypto import FILETYPE_PEM, load_certificate, verify
 from django.conf import settings

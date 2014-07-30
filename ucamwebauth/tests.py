@@ -1,11 +1,11 @@
 from base64 import b64encode
 from datetime import datetime, timedelta
 from string import maketrans
-import urllib
 try:
     from urlparse import urlparse, parse_qs
+    from urllib import unquote
 except ImportError:
-    from urllib.parse import urlparse, parse_qs
+    from urllib.parse import urlparse, parse_qs, unquote
 from OpenSSL.crypto import load_privatekey, FILETYPE_PEM, sign
 import requests
 from django.test import TestCase
@@ -119,7 +119,7 @@ class RavenTestCase(TestCase):
                                       'params': raven_params, 'fail': raven_fail},
                                      allow_redirects=False)
         self.assertEqual(303, response.status_code)
-        return urllib.unquote(response.headers['location']).split('WLS-Response=')[1]
+        return unquote(response.headers['location']).split('WLS-Response=')[1]
 
     def test_login_raven_not_local(self):
         """Tests login of user via raven, not in database"""
