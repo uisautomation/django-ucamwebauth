@@ -5,10 +5,8 @@ from base64 import b64decode
 try:
     from urlparse import parse_qs
     from urllib import unquote
-    from string import maketrans
 except ImportError:
     from urllib.parse import parse_qs, unquote
-    from bytes import maketrans
 from django.conf import settings
 from django.http import HttpResponseRedirect
 
@@ -19,8 +17,7 @@ def decode_sig(sig):
     """Decodes a signature from the variant base64 used by raven.
     @param sig  A string giving the signature in Raven's variant base-64
     @return  A binary string containing the signature"""
-    table = maketrans("-._", "+/=")
-    sig = str(sig).translate(table)
+    sig = str(sig).replace("-", "+").replace(".", "/").replace("_", "=")
     try:
         return b64decode(sig)
     except TypeError:

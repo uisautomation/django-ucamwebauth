@@ -3,10 +3,8 @@ from datetime import datetime, timedelta
 try:
     from urlparse import urlparse, parse_qs
     from urllib import unquote, urlencode
-    from string import maketrans
 except ImportError:
     from urllib.parse import urlparse, parse_qs, unquote, urlencode
-    from bytes import maketrans
 from OpenSSL.crypto import load_privatekey, FILETYPE_PEM, sign
 import requests
 from django.test import TestCase
@@ -72,7 +70,6 @@ def create_wls_response(raven_ver='3', raven_status='200', raven_msg='',
     using keys from https://raven.cam.ac.uk/project/keys/demo_server/
     """
     raven_pkey = load_privatekey(FILETYPE_PEM, raven_key_pem)
-    trans_table = maketrans("+/=", "-._")
 
     # This is the data which is signed by Raven with their private key
     # Note data consists of full payload with exception of kid and sig
@@ -90,7 +87,7 @@ def create_wls_response(raven_ver='3', raven_status='200', raven_msg='',
     # process
     wls_response_data.append(raven_kid)
     if raven_sig_input:
-        wls_response_data.append(str(raven_sig).translate(trans_table))
+        wls_response_data.append(str(raven_sig).replace("+", "-").replace("/", ".").replace("=", "_"))
     else:
         wls_response_data.append('')
 
