@@ -3,9 +3,9 @@ from datetime import datetime, timedelta
 from string import maketrans
 try:
     from urlparse import urlparse, parse_qs
-    from urllib import unquote
+    from urllib import unquote, urlencode
 except ImportError:
-    from urllib.parse import urlparse, parse_qs, unquote
+    from urllib.parse import urlparse, parse_qs, unquote, urlencode
 from OpenSSL.crypto import load_privatekey, FILETYPE_PEM, sign
 import requests
 from django.test import TestCase
@@ -363,14 +363,14 @@ class RavenTestCase(TestCase):
     def test_params(self):
         testparams = { 'this': ['that%21%25!+/'] }
         raw = self.get_wls_response(
-            raven_params=urllib.urlencode(testparams, doseq=True))
+            raven_params=urlencode(testparams, doseq=True))
         r = RavenResponse(raw)
         self.assertEqual(r.params, testparams)
 
     def test_get_next(self):
         testparams = { 'next': ['http://foo.example/!++!%2F/'] }
         raw = self.get_wls_response(
-            raven_params=urllib.urlencode(testparams, doseq=True))
+            raven_params=urlencode(testparams, doseq=True))
         next = get_next_from_wls_response(raw)
         self.assertEqual(next, testparams['next'][0])
 
