@@ -1,9 +1,16 @@
 language: python
 python:
-  - "2.7"
-
-# command to install dependencies
-install: "pip install -q -r requirements.txt"
-
-# command to run tests
+  - 2.7
+  - 3.3
+  - 3.4
+env:
+  - DJANGO=django==1.6.5
+  - DJANGO=https://www.djangoproject.com/download/1.7c2/tarball/
+install:
+  - pip install $DJANGO
+  - pip install PyOpenSSL
+  - pip install requests
+  - python setup.py -q install
 script: python runtests.py
+notifications:
+  email: false
