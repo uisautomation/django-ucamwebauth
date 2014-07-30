@@ -87,7 +87,7 @@ def create_wls_response(raven_ver='3', raven_status='200', raven_msg='',
     # process
     wls_response_data.append(raven_kid)
     if raven_sig_input:
-        wls_response_data.append(str(raven_sig).replace("+", "-").replace("/", ".").replace("=", "_"))
+        wls_response_data.append(raven_sig.decode().replace("+", "-").replace("/", ".").replace("=", "_"))
     else:
         wls_response_data.append('')
 

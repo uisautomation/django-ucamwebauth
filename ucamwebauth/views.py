@@ -1,7 +1,10 @@
-import urllib
 from django.http import HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import redirect
+try:
+    from urllib import urlencode
+except ImportError:
+    from urllib.parse import urlencode
 from ucamwebauth import MalformedResponseError
 from ucamwebauth.utils import setting, HttpResponseSeeOther, get_next_from_wls_response
 
@@ -38,9 +41,9 @@ def raven_login(request):
     # aauth is ignored as v3 only supports 'pwd', therefore we do not need it.
     iact = setting('UCAMWEBAUTH_IACT', default='')
     msg = setting('UCAMWEBAUTH_MSG', default='')
-    params = urllib.urlencode([('next', request.GET['next'])])
+    params = urlencode([('next', request.GET['next'])])
     fail = setting('UCAMWEBAUTH_FAIL', default='')
-    msg = urllib.urlencode([('ver', 3), ('url', return_url), ('desc', desc),
+    msg = urlencode([('ver', 3), ('url', return_url), ('desc', desc),
                             ('iact', iact), ('msg', msg), ('params', params),
                             ('fail', fail)])
     return HttpResponseSeeOther("%s?%s" % (login_url, msg) )
