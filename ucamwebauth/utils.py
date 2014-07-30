@@ -1,13 +1,14 @@
 import time
 import calendar
 
-from string import maketrans
 from base64 import b64decode
 try:
     from urlparse import parse_qs
     from urllib import unquote
+    from string import maketrans
 except ImportError:
     from urllib.parse import parse_qs, unquote
+    from bytes import maketrans
 from django.conf import settings
 from django.http import HttpResponseRedirect
 
