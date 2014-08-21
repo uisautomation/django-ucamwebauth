@@ -1,3 +1,13 @@
+django-ucamwebauth (1.1) unstable; urgency=low
+
+  [ Ben Harris ]
+  * Quote and unquote elements of requests and responses more correctly.
+  * Add build-dependency on python-markdown.
+  * Re-work RavenAuthBackend to inherit from RemoteUserBackend.
+  [ Abraham Martin ]
+  * new travis conf
+  * Python 3 compatibility
+
 django-ucamwebauth (1.0) unstable; urgency=low
 
   [Abraham Martin]

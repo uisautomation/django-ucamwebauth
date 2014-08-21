@@ -8,7 +8,9 @@ setup(
     description='A Django authentication backend for Ucam-WebAuth a.k.a. Raven',
     long_description=open('README.rst').read(),
     url='https://git.csx.cam.ac.uk/x/ucs/raven/django-ucamwebauth.git',
-    version='1.0',
+    # When changing this version number, remember to update
+    # django-ucamwebauth.spec and debian/changelog.
+    version='1.1',
     license='MIT',
     author='Information Systems Group, University Information Services, University of Cambridge',
     author_email='raven-support@cam.ac.uk',
