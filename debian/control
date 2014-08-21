@@ -10,7 +10,7 @@ Standards-Version: 3.9.4
 
 Package: python-django-ucamwebauth
 Architecture: all
-Depends: python-django (>=1.6), python-requests, python-openssl, ${misc:Depends}, ${python:Depends}
+Depends: python-django (>=1.6), python-requests, python-openssl (>= 0.11~), ${misc:Depends}, ${python:Depends}
 Description: University of Cambridge Web Authentication module for Django
  This package provides a django authentication back-end to the
  University of Cambridge Web Authentication system.
