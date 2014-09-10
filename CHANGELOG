@@ -1,0 +1,14 @@
+django-ucamwebauth changelog
+=============================
+
+1.1 - 19/08/2014
+------------------
+
+- Better quote and unquote of tokens received through URLs (thanks to Ben Harris)
+- RavenAuthBackend now inherits from RemoteUserBackend reducing the amount of code needed (thanks to Ben Harris)
+
+
+1.0 - 15/07/2014
+------------------
+
+- Initial version

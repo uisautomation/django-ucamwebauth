@@ -17,7 +17,7 @@ def decode_sig(sig):
     """Decodes a signature from the variant base64 used by raven.
     @param sig  A string giving the signature in Raven's variant base-64
     @return  A binary string containing the signature"""
-    sig = str(sig).replace("-", "+").replace(".", "/").replace("_", "=")
+    sig = sig.replace("-", "+").replace(".", "/").replace("_", "=")
     try:
         return b64decode(sig)
     except TypeError:
