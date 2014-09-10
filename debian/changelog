@@ -1,3 +1,9 @@
+django-ucamwebauth (1.2) unstable; urgency=low
+
+  * New upstream release
+
+ -- Abraham Martin <amc203@cam.ac.uk>  Wed, 10 Sep 2014 10:30:23 +0100
+
 django-ucamwebauth (1.0) unstable; urgency=low
 
   [Abraham Martin]
