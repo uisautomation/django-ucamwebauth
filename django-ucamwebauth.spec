@@ -1,6 +1,6 @@
 Name: django-ucamwebauth
-Version: 1.0
-Release: 0.1
+Version: 1.2
+Release: 1
 Summary: University of Cambridge Web Authentication module for Django
 Source: %{name}-%{version}.tar.gz
 Group: Unknown
@@ -9,7 +9,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildArch: noarch
 BuildRequires: python-setuptools
 
-Requires: python-Django >= 1.6 python-openssl
+Requires: python-Django >= 1.6 python-openssl >= 0.11
 
 %Description
 This package provides a django authentication back-end to the

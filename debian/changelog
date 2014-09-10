@@ -1,8 +1,21 @@
 django-ucamwebauth (1.2) unstable; urgency=low
 
   * New upstream release
+  * UCAMWEBAUTH_CREATE_USE is now by default True. Empty database with default to False cause automatic redirect to
+    log out and very few people will use the False option to only let users in if they are already present in the
+    database.
 
  -- Abraham Martin <amc203@cam.ac.uk>  Wed, 10 Sep 2014 10:30:23 +0100
+
+django-ucamwebauth (1.1) unstable; urgency=low
+
+  [ Ben Harris ]
+  * Quote and unquote elements of requests and responses more correctly.
+  * Add build-dependency on python-markdown.
+  * Re-work RavenAuthBackend to inherit from RemoteUserBackend.
+  [ Abraham Martin ]
+  * new travis conf
+  * Python 3 compatibility
 
 django-ucamwebauth (1.0) unstable; urgency=low
 

@@ -4,7 +4,9 @@ django-ucamwebauth changelog
 1.2 - 10/0802014
 ------------------
 
-- UCAMWEBAUTH_CREATE_USE is now by default True
+- UCAMWEBAUTH_CREATE_USE is now by default True. Empty database with default to False cause automatic redirect to
+    log out and very few people will use the False option to only let users in if they are already present in the
+    database.
 
 
 1.1 - 19/08/2014
