@@ -39,4 +39,4 @@ class RavenAuthBackend(RemoteUserBackend):
     # Backwards compatibility: honour UCAMWEBAUTH_CREATE_USER.
     @property
     def create_unknown_user(self):
-        return setting('UCAMWEBAUTH_CREATE_USER', default=False)
+        return setting('UCAMWEBAUTH_CREATE_USER', default=True)

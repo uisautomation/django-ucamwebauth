@@ -56,16 +56,9 @@ UCAMWEBAUTH_CERTS: a dictionary including key names and their associated certifi
 UCAMWEBAUTH_TIMEOUT: An integer with the time (in seconds) that has to pass to consider an authentication timed out
     (Default to 30).
 UCAMWEBAUTH_REDIRECT_AFTER_LOGIN: The url where you want to redirect the user after login (Default to '/').
+UCAMWEBAUTH_CREATE_USE: This defaults to True, allowing the autocreation of users who have been successfully 
+authenticated by Raven, but do not exist in the local database. The user is created with set_unusable_password().
 ```
-
-The final major setting is:
-
-```python
-UCAMWEBAUTH_CREATE_USER = False
-```
-
-This defaults to False, but when True, allows the autocreation of users who have been successfully authenticated by
-Raven, but do not exist in the local database. The user is created with set_unusable_password().
 
 An example, referencing the Raven test environment is given below:
 
@@ -74,7 +67,6 @@ UCAMWEBAUTH_LOGIN_URL = 'https://demo.raven.cam.ac.uk/auth/authenticate.html'
 UCAMWEBAUTH_LOGOUT_URL = 'https://demo.raven.cam.ac.uk/auth/logout.html'
 UCAMWEBAUTH_RETURN_URL = 'http://your.example.com/raven_return/'
 UCAMWEBAUTH_LOGOUT_REDIRECT = 'http://www.cam.ac.uk/'
-UCAMWEBAUTH_NOT_CURRENT = False
 UCAMWEBAUTH_CERTS = {901: """-----BEGIN CERTIFICATE-----
 MIIDzTCCAzagAwIBAgIBADANBgkqhkiG9w0BAQQFADCBpjELMAkGA1UEBhMCR0Ix
 EDAOBgNVBAgTB0VuZ2xhbmQxEjAQBgNVBAcTCUNhbWJyaWRnZTEgMB4GA1UEChMX
@@ -98,7 +90,7 @@ LSxbGuFG9yfPFIqaSntlYMxKKB5ba/tIAMzyAOHxdEM5hi1DXRsOok3ElWjOw9oN
 6Psvk/hLUN+YfC1saaUs3oh+OTfD7I4gRTbXPgsd6JgJQ0TQtuGygJdaht9cRBHW
 wOq24EIbX5LquL9w+uvnfXw=
 -----END CERTIFICATE-----
-""")
+"""}
 ```
 
 ## Errors
@@ -113,7 +105,14 @@ corresponding templates. To use the default behaviour just add:
 ```python
 MIDDLEWARE_CLASSES = (
     ...
-    'ucamwebauth.middleware.DefaultErrorBehaviour'
+    'ucamwebauth.middleware.DefaultErrorBehaviour',
+    ...
+)
+
+INSTALLED_APPS = (
+    ...
+    'ucamwebauth',
+    ...
 )
 ```
 

@@ -1,6 +1,12 @@
 django-ucamwebauth changelog
 =============================
 
+1.2 - 10/0802014
+------------------
+
+- UCAMWEBAUTH_CREATE_USE is now by default True
+
+
 1.1 - 19/08/2014
 ------------------
 
