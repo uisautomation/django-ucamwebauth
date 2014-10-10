@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import redirect
@@ -36,7 +37,9 @@ def raven_return(request):
 def raven_login(request):
     # Get the Raven object and return a redirect to the Raven server
     login_url = setting('UCAMWEBAUTH_LOGIN_URL')
-    return_url = setting('UCAMWEBAUTH_RETURN_URL')
+    return_url = setting('UCAMWEBAUTH_RETURN_URL',
+                         default=request.build_absolute_uri(
+                             reverse('raven_return')))
     desc = setting('UCAMWEBAUTH_DESC', default='')
     # aauth is ignored as v3 only supports 'pwd', therefore we do not need it.
     iact = setting('UCAMWEBAUTH_IACT', default='')
