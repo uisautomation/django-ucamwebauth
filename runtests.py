@@ -30,7 +30,6 @@ settings.configure(
     ),
     UCAMWEBAUTH_LOGIN_URL='https://demo.raven.cam.ac.uk/auth/authenticate.html',
     UCAMWEBAUTH_LOGOUT_URL='https://demo.raven.cam.ac.uk/auth/logout.html',
-    UCAMWEBAUTH_RETURN_URL='http://www.example.org/raven_return/',
     UCAMWEBAUTH_CERTS={901: """-----BEGIN CERTIFICATE-----
 MIIDzTCCAzagAwIBAgIBADANBgkqhkiG9w0BAQQFADCBpjELMAkGA1UEBhMCR0Ix
 EDAOBgNVBAgTB0VuZ2xhbmQxEjAQBgNVBAcTCUNhbWJyaWRnZTEgMB4GA1UEChMX

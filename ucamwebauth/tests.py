@@ -15,7 +15,7 @@ from django.contrib.auth.models import User
 from ucamwebauth import InvalidResponseError, MalformedResponseError, setting, UserNotAuthorised, RavenResponse, \
     PublicKeyNotFoundError
 from ucamwebauth.exceptions import OtherStatusCode
-from ucamwebauth.utils import get_next_from_wls_response
+from ucamwebauth.utils import get_next_from_wls_response, get_return_url
 from ucamwebauth.backends import RavenAuthBackend
 
 RAVEN_TEST_USER = 'test0001'
@@ -63,7 +63,7 @@ def wls_response_escape(x):
 def create_wls_response(raven_ver='3', raven_status='200', raven_msg='',
                         raven_issue=datetime.utcnow().strftime('%Y%m%dT%H%M%SZ'),
                         raven_id='1347296083-8278-2',
-                        raven_url=setting('UCAMWEBAUTH_RETURN_URL'),
+                        raven_url=None,
                         raven_principal=RAVEN_TEST_USER, raven_ptags='current',
                         raven_auth='pwd', raven_sso='', raven_life='36000',
                         raven_params='', raven_kid='901',
@@ -71,6 +71,9 @@ def create_wls_response(raven_ver='3', raven_status='200', raven_msg='',
     """Creates a valid WLS Response as the Raven test server would
     using keys from https://raven.cam.ac.uk/project/keys/demo_server/
     """
+    if raven_url == None:
+        raven_url = (
+            get_return_url(RequestFactory().get(reverse('raven_return'))))
     raven_pkey = load_privatekey(FILETYPE_PEM, raven_key_pem)
 
     # This is the data which is signed by Raven with their private key
@@ -104,10 +107,13 @@ class RavenTestCase(TestCase):
         super(RavenTestCase, self).__init__(*args, **kwargs)
 
     def get_wls_response(self, raven_user=RAVEN_TEST_USER, raven_pwd=RAVEN_TEST_PWD, raven_ver='3',
-                         raven_url=setting('UCAMWEBAUTH_RETURN_URL'), raven_desc='',
+                         raven_url=None, raven_desc='',
                          raven_aauth='pwd', raven_iact='', raven_msg='',
                          raven_params='', raven_fail='', cancel=False):
         # This request only test when raven_aauth is pwd and raven_iact is omitted
+        if raven_url == None:
+            raven_url = (
+                get_return_url(RequestFactory().get(reverse('raven_return'))))
         if cancel:
             response = requests.post('https://demo.raven.cam.ac.uk/auth/authenticate2.html',
                                      {'userid': raven_user, 'pwd': raven_pwd, 'ver': raven_ver, 'url': raven_url,
@@ -225,10 +231,10 @@ class RavenTestCase(TestCase):
         self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_wrong_return_url(self):
-        with self.assertRaises(MalformedResponseError) as excep:
+        with self.assertRaises(InvalidResponseError) as excep:
             self.client.get(reverse('raven_return'),
                             {'WLS-Response': create_wls_response(raven_url="error")})
-        self.assertTrue(str(excep.exception).startswith("The url parameter is not a valid url, got error"))
+        self.assertTrue(str(excep.exception).startswith("The URL in the response does not match"))
         self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_username_when_not_status_200(self):
