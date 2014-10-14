@@ -22,7 +22,7 @@ class RavenAuthBackend(RemoteUserBackend):
             response = RavenResponse(response_req)
         except Exception as e:
             logger.error("%s: %s" % (type(e).__name__, e))
-            raise e
+            raise
 
         if not response.validate():
             raise OtherStatusCode("The WLS returned status %d: %s" %

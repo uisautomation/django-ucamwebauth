@@ -5,6 +5,7 @@ try:
     from urllib import unquote, urlencode
 except ImportError:
     from urllib.parse import urlparse, parse_qs, unquote, urlencode
+import sys
 from OpenSSL.crypto import load_privatekey, FILETYPE_PEM, sign
 import requests
 from django.test import TestCase, RequestFactory
@@ -15,6 +16,7 @@ from ucamwebauth import InvalidResponseError, MalformedResponseError, setting, U
     PublicKeyNotFoundError
 from ucamwebauth.exceptions import OtherStatusCode
 from ucamwebauth.utils import get_next_from_wls_response
+from ucamwebauth.backends import RavenAuthBackend
 
 RAVEN_TEST_USER = 'test0001'
 RAVEN_TEST_PWD = 'test'
@@ -380,3 +382,21 @@ class RavenTestCase(TestCase):
             parse_qs(parse_qs(urlparse(response['Location']).query)
                      ['params'][0])['next'][0],
             testnext)
+
+    def test_exception_trace(self):
+        # This is a bit fragile.  The aim is to check that RavenAuthBackend
+        # isn't overwriting the traceback of exceptions raised by
+        # RavenResponse.
+        try:
+            # Passing no args causes an exception.
+            RavenAuthBackend().authenticate()
+        except:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            found = False
+            while exc_traceback != None:
+                # Check that the traceback reaches RavenResponse.__init__
+                if (exc_traceback.tb_frame.f_code ==
+                    RavenResponse.__init__.__code__):
+                    found = True
+                exc_traceback = exc_traceback.tb_next
+            self.assertTrue(found)
