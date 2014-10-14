@@ -366,6 +366,15 @@ class RavenTestCase(TestCase):
                          'The WLS returned status 410: The user cancelled the authentication request')
         self.assertNotIn('_auth_user_id', self.client.session)
 
+    def test_return_url(self):
+        u = "http://elsewhere.example"
+        with self.settings(UCAMWEBAUTH_RETURN_URL=u):
+            req = (RequestFactory().get(reverse('raven_return')))
+            self.assertEqual(get_return_url(req), u)
+            self.client.get(reverse('raven_return'),
+                            {'WLS-Response': create_wls_response()})
+        self.assertIn('_auth_user_id', self.client.session)
+            
     def test_params(self):
         testparams = { 'this': ['that%21%25!+/'] }
         raw = self.get_wls_response(
