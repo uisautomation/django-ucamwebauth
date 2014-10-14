@@ -114,7 +114,7 @@ class RavenResponse(object):
         # accessed.  The request has already been checked against
         # ALLOWED_HOSTS by Django.
         if self.url != get_return_url(response_req):
-            raise InvalidResponseError("The URL in the response does not match the URL expected (%s vs %s)" % (self.url, get_return_url(response_req)))
+            raise InvalidResponseError("The URL in the response does not match the URL expected")
 
         # principal: Only present if status == 200, indicates the authenticated identity of the user
         if self.status == 200:
