@@ -7,7 +7,6 @@ except ImportError:
 
 from OpenSSL.crypto import FILETYPE_PEM, load_certificate, verify
 from django.conf import settings
-from django.core.validators import URLValidator
 
 from ucamwebauth.utils import decode_sig, setting, parse_time, get_return_url
 from ucamwebauth.exceptions import (MalformedResponseError, InvalidResponseError, PublicKeyNotFoundError,
@@ -109,12 +108,7 @@ class RavenResponse(object):
             raise MalformedResponseError("Empty ID")
 
         # url: The value of url supplied in the authentication request and used to form the authentication response.
-        try:
-            self.url = tokens[5]
-            urlvalidator = URLValidator() # From django 1.7 URLValidator accepts schemes=['https', 'http']
-            urlvalidator(self.url)
-        except Exception:
-            raise MalformedResponseError("The url parameter is not a valid url, got %s" % tokens[5])
+        self.url = tokens[5]
 
         # Check that 'url' represents the resource currently being
         # accessed.  The request has already been checked against
