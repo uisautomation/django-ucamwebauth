@@ -7,7 +7,7 @@ except ImportError:
     from urllib.parse import urlparse, parse_qs, unquote, urlencode
 from OpenSSL.crypto import load_privatekey, FILETYPE_PEM, sign
 import requests
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 from django.test.client import Client
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
@@ -184,7 +184,7 @@ class RavenTestCase(TestCase):
         self.assertNotIn('_auth_user_id', self.client.session)
         with self.assertRaises(MalformedResponseError) as excep:
             RavenResponse()
-        self.assertEqual(str(excep.exception), "no WLS-Response")
+        self.assertEqual(str(excep.exception), "no request supplied")
         self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_login_issue_future_fails_with_template(self):
@@ -362,7 +362,8 @@ class RavenTestCase(TestCase):
         testparams = { 'this': ['that%21%25!+/'] }
         raw = self.get_wls_response(
             raven_params=urlencode(testparams, doseq=True))
-        r = RavenResponse(raw)
+        r = RavenResponse(RequestFactory().get(reverse('raven_return'),
+                                               {'WLS-Response': raw}))
         self.assertEqual(r.params, testparams)
 
     def test_get_next(self):

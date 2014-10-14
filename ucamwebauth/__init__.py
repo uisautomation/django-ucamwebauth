@@ -9,7 +9,7 @@ from OpenSSL.crypto import FILETYPE_PEM, load_certificate, verify
 from django.conf import settings
 from django.core.validators import URLValidator
 
-from ucamwebauth.utils import decode_sig, setting, parse_time
+from ucamwebauth.utils import decode_sig, setting, parse_time, get_return_url
 from ucamwebauth.exceptions import (MalformedResponseError, InvalidResponseError, PublicKeyNotFoundError,
                                     UserNotAuthorised, OtherStatusCode)
 
@@ -30,14 +30,19 @@ class RavenResponse(object):
               560: 'WAA not authorised',
               570: 'Authentication declined'}
 
-    def __init__(self, response_str=None):
+    def __init__(self, response_req=None):
         """Creates a RavenResponse object from the response of the Web login service (WLS) of the University of
         Cambridge
-        @param reponse_str The response string from the WLS passed as GET['WLS-Response']
+        @param response_req The HTTP request that contains the WLS response.
         """
 
-        if response_str is None:
+        if response_req is None:
+            raise MalformedResponseError("no request supplied")
+        try:
+            response_str = response_req.GET['WLS-Response']
+        except KeyError:
             raise MalformedResponseError("no WLS-Response")
+
 
         # The WLS sends an authentication response message as follows:  First a 'encoded response string' is formed by
         # concatenating the values of the response fields below, in the order shown, using '!' as a separator character.
@@ -111,12 +116,11 @@ class RavenResponse(object):
         except Exception:
             raise MalformedResponseError("The url parameter is not a valid url, got %s" % tokens[5])
 
-        # Check that 'url' represents the resource currently being accessed. Note that in many environments a WAA will
-        # not be able to securely establish their own hostname and care must be taken not to end up relying on the
-        # value of the 'Host:' header from the HTTP response. It may be necessary to provide axillary configuration
-        # information to enable a WAA to derive urls safely. TODO improve the check url system
-        if self.url != setting('UCAMWEBAUTH_RETURN_URL'):
-            raise InvalidResponseError("The URL in the response does not match the URL expected")
+        # Check that 'url' represents the resource currently being
+        # accessed.  The request has already been checked against
+        # ALLOWED_HOSTS by Django.
+        if self.url != get_return_url(response_req):
+            raise InvalidResponseError("The URL in the response does not match the URL expected (%s vs %s)" % (self.url, get_return_url(response_req)))
 
         # principal: Only present if status == 200, indicates the authenticated identity of the user
         if self.status == 200:

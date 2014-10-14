@@ -1,4 +1,3 @@
-from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import redirect
@@ -7,17 +6,17 @@ try:
 except ImportError:
     from urllib.parse import urlencode
 from ucamwebauth import MalformedResponseError
-from ucamwebauth.utils import setting, HttpResponseSeeOther, get_next_from_wls_response
+from ucamwebauth.utils import setting, HttpResponseSeeOther, get_next_from_wls_response, get_return_url
 
 
 def raven_return(request):
     try:
         token = request.GET['WLS-Response']
-    except Exception:
+    except KeyError:
         raise MalformedResponseError("no WLS-Response")
 
     # See if this is a valid token
-    user = authenticate(response_str=token)
+    user = authenticate(response_req=request)
 
     if user is None:
         return redirect(setting('UCAMWEBAUTH_LOGOUT_REDIRECT', default='/'))
@@ -37,9 +36,7 @@ def raven_return(request):
 def raven_login(request):
     # Get the Raven object and return a redirect to the Raven server
     login_url = setting('UCAMWEBAUTH_LOGIN_URL')
-    return_url = setting('UCAMWEBAUTH_RETURN_URL',
-                         default=request.build_absolute_uri(
-                             reverse('raven_return')))
+    return_url = get_return_url(request)
     desc = setting('UCAMWEBAUTH_DESC', default='')
     # aauth is ignored as v3 only supports 'pwd', therefore we do not need it.
     iact = setting('UCAMWEBAUTH_IACT', default='')
