@@ -53,6 +53,7 @@ There are four minimum config settings:
     UCAMWEBAUTH_LOGIN_URL: a string representing the URL for the Raven login redirect.
     UCAMWEBAUTH_LOGOUT_URL: a string representing the logout URL for Raven.
     UCAMWEBAUTH_RETURN_URL: the URL of your app which the Raven service should return the user to after authentication.
+        (Default is generated automatically from the urlconf)
     UCAMWEBAUTH_LOGOUT_REDIRECT: a string representing the URL to where the user is redirected when she logs out of the app
         (Default to '/').
     UCAMWEBAUTH_NOT_CURRENT: a boolean value representing if raven users that are currently not members of the university
@@ -71,7 +72,6 @@ An example, referencing the Raven test environment is given below:
 
     UCAMWEBAUTH_LOGIN_URL = 'https://demo.raven.cam.ac.uk/auth/authenticate.html'
     UCAMWEBAUTH_LOGOUT_URL = 'https://demo.raven.cam.ac.uk/auth/logout.html'
-    UCAMWEBAUTH_RETURN_URL = 'http://your.example.com/raven_return/'
     UCAMWEBAUTH_LOGOUT_REDIRECT = 'http://www.cam.ac.uk/'
     UCAMWEBAUTH_CERTS = {901: """-----BEGIN CERTIFICATE-----
     MIIDzTCCAzagAwIBAgIBADANBgkqhkiG9w0BAQQFADCBpjELMAkGA1UEBhMCR0Ix
