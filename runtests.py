@@ -1,8 +1,6 @@
 import logging
 import os, sys
-import django
-
-DIRNAME = os.path.dirname(__file__)
+from django.core.management import execute_from_command_line
 
 from django.conf import settings
 settings.configure(
@@ -58,17 +56,4 @@ wOq24EIbX5LquL9w+uvnfXw=
 
 logging.basicConfig()
 
-if django.get_version().startswith('1.7'):
-    django.setup()
-    from django.test.runner import DiscoverRunner
-    test_runner = DiscoverRunner()
-elif django.get_version().startswith('1.6'):
-    from django.test.runner import DiscoverRunner
-    test_runner = DiscoverRunner()
-else:
-    from django.test.simple import DjangoTestSuiteRunner
-    test_runner = DjangoTestSuiteRunner(verbosity=1)
-
-failures = test_runner.run_tests(['ucamwebauth', ])
-if failures:
-    sys.exit(failures)
+execute_from_command_line(['', 'test'])
