@@ -4,10 +4,8 @@ try:
     from urllib import unquote
 except ImportError:
     from urllib.parse import parse_qs, unquote
-
 from OpenSSL.crypto import FILETYPE_PEM, load_certificate, verify
 from django.conf import settings
-
 from ucamwebauth.utils import decode_sig, setting, parse_time, get_return_url
 from ucamwebauth.exceptions import (MalformedResponseError, InvalidResponseError, PublicKeyNotFoundError,
                                     UserNotAuthorised, OtherStatusCode)

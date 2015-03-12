@@ -41,12 +41,17 @@ def raven_login(request):
     # aauth is ignored as v3 only supports 'pwd', therefore we do not need it.
     iact = setting('UCAMWEBAUTH_IACT', default='')
     msg = setting('UCAMWEBAUTH_MSG', default='')
-    params = urlencode([('next', request.GET['next'])])
     fail = setting('UCAMWEBAUTH_FAIL', default='')
-    msg = urlencode([('ver', 3), ('url', return_url), ('desc', desc),
-                            ('iact', iact), ('msg', msg), ('params', params),
-                            ('fail', fail)])
-    return HttpResponseSeeOther("%s?%s" % (login_url, msg) )
+    next_p = request.GET.get('next', None)
+    if next_p is not None:
+        params = urlencode([('next', next_p)])
+        msg = urlencode([('ver', 3), ('url', return_url), ('desc', desc), ('iact', iact), ('msg', msg),
+                         ('params', params), ('fail', fail)])
+    else:
+        msg = urlencode([('ver', 3), ('url', return_url), ('desc', desc), ('iact', iact), ('msg', msg),
+                         ('fail', fail)])
+
+    return HttpResponseSeeOther("%s?%s" % (login_url, msg))
 
 
 def raven_logout(request):

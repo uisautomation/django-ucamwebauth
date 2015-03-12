@@ -1,5 +1,6 @@
 from base64 import b64encode
 from datetime import datetime, timedelta
+from django.conf import settings
 try:
     from urlparse import urlparse, parse_qs
     from urllib import unquote, urlencode
@@ -12,7 +13,7 @@ from django.test import TestCase, RequestFactory
 from django.test.client import Client
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
-from ucamwebauth import InvalidResponseError, MalformedResponseError, setting, UserNotAuthorised, RavenResponse, \
+from ucamwebauth import InvalidResponseError, MalformedResponseError, UserNotAuthorised, RavenResponse, \
     PublicKeyNotFoundError
 from ucamwebauth.exceptions import OtherStatusCode
 from ucamwebauth.utils import get_next_from_wls_response, get_return_url
@@ -362,8 +363,7 @@ class RavenTestCase(TestCase):
 
     def test_user_cancel_wls_auth(self):
         with self.assertRaises(OtherStatusCode) as excep:
-            response = self.client.get(reverse('raven_return'),
-                                       {'WLS-Response': self.get_wls_response(cancel=True)})
+            self.client.get(reverse('raven_return'), {'WLS-Response': self.get_wls_response(cancel=True)})
         self.assertEqual(str(excep.exception),
                          'The WLS returned status 410: The user cancelled the authentication request')
         self.assertNotIn('_auth_user_id', self.client.session)
@@ -378,7 +378,7 @@ class RavenTestCase(TestCase):
         self.assertIn('_auth_user_id', self.client.session)
 
     def test_params(self):
-        testparams = { 'this': ['that%21%25!+/'] }
+        testparams = {'this': ['that%21%25!+/']}
         raw = self.get_wls_response(
             raven_params=urlencode(testparams, doseq=True))
         r = RavenResponse(RequestFactory().get(reverse('raven_return'),
@@ -389,8 +389,13 @@ class RavenTestCase(TestCase):
         testparams = {'next': ['http://foo.example/!++!%2F/']}
         raw = self.get_wls_response(
             raven_params=urlencode(testparams, doseq=True))
-        next = get_next_from_wls_response(raw)
-        self.assertEqual(next, testparams['next'][0])
+        next_p = get_next_from_wls_response(raw)
+        self.assertEqual(next_p, testparams['next'][0])
+
+    def test_empty_next(self):
+        response = self.client.get('/accounts/login/')
+        self.assertEqual(response.status_code, 303)
+        self.assertTrue(response.url.startswith(settings.UCAMWEBAUTH_LOGIN_URL))
 
     def test_next_param(self):
         testnext = 'http://foo.example/!++!%2F/'
@@ -412,7 +417,7 @@ class RavenTestCase(TestCase):
             found = False
             while exc_traceback is not None:
                 # Check that the traceback reaches RavenResponse.__init__
-                if (exc_traceback.tb_frame.f_code == RavenResponse.__init__.__code__):
+                if exc_traceback.tb_frame.f_code == RavenResponse.__init__.__code__:
                     found = True
                 exc_traceback = exc_traceback.tb_next
             self.assertTrue(found)
