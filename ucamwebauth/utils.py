@@ -1,6 +1,5 @@
 import time
 import calendar
-
 from base64 import b64decode
 try:
     from urlparse import parse_qs
@@ -10,7 +9,6 @@ except ImportError:
 from django.conf import settings
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
-
 from ucamwebauth.exceptions import MalformedResponseError
 
 
@@ -48,6 +46,7 @@ def get_next_from_wls_response(response_str):
         return params['next'][0]
     else:
         return None
+
 
 def get_return_url(request):
     """Generate the return URL for a particular request (either a request

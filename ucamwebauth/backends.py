@@ -6,6 +6,7 @@ from ucamwebauth.utils import setting
 
 logger = logging.getLogger(__name__)
 
+
 # We inherit the automatic-user-creation code from RemoteUserBackend.
 class RavenAuthBackend(RemoteUserBackend):
     """An authentication backend for django that uses Raven.  To use, add

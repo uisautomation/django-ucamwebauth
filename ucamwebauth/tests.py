@@ -57,8 +57,10 @@ cbvAhow217X9V0dVerEOKxnNYspXRrh36h7k4mQA+sDq
 -----END RSA PRIVATE KEY-----
 """
 
+
 def wls_response_escape(x):
     return x.replace('%', '%25').replace('!', '%21')
+
 
 def create_wls_response(raven_ver='3', raven_status='200', raven_msg='',
                         raven_issue=datetime.utcnow().strftime('%Y%m%dT%H%M%SZ'),
@@ -71,7 +73,7 @@ def create_wls_response(raven_ver='3', raven_status='200', raven_msg='',
     """Creates a valid WLS Response as the Raven test server would
     using keys from https://raven.cam.ac.uk/project/keys/demo_server/
     """
-    if raven_url == None:
+    if raven_url is None:
         raven_url = (
             get_return_url(RequestFactory().get(reverse('raven_return'))))
     raven_pkey = load_privatekey(FILETYPE_PEM, raven_key_pem)
@@ -111,7 +113,7 @@ class RavenTestCase(TestCase):
                          raven_aauth='pwd', raven_iact='', raven_msg='',
                          raven_params='', raven_fail='', cancel=False):
         # This request only test when raven_aauth is pwd and raven_iact is omitted
-        if raven_url == None:
+        if raven_url is None:
             raven_url = (
                 get_return_url(RequestFactory().get(reverse('raven_return'))))
         if cancel:
@@ -374,7 +376,7 @@ class RavenTestCase(TestCase):
             self.client.get(reverse('raven_return'),
                             {'WLS-Response': create_wls_response()})
         self.assertIn('_auth_user_id', self.client.session)
-            
+
     def test_params(self):
         testparams = { 'this': ['that%21%25!+/'] }
         raw = self.get_wls_response(
@@ -384,7 +386,7 @@ class RavenTestCase(TestCase):
         self.assertEqual(r.params, testparams)
 
     def test_get_next(self):
-        testparams = { 'next': ['http://foo.example/!++!%2F/'] }
+        testparams = {'next': ['http://foo.example/!++!%2F/']}
         raw = self.get_wls_response(
             raven_params=urlencode(testparams, doseq=True))
         next = get_next_from_wls_response(raw)
@@ -408,10 +410,9 @@ class RavenTestCase(TestCase):
         except:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             found = False
-            while exc_traceback != None:
+            while exc_traceback is not None:
                 # Check that the traceback reaches RavenResponse.__init__
-                if (exc_traceback.tb_frame.f_code ==
-                    RavenResponse.__init__.__code__):
+                if (exc_traceback.tb_frame.f_code == RavenResponse.__init__.__code__):
                     found = True
                 exc_traceback = exc_traceback.tb_next
             self.assertTrue(found)

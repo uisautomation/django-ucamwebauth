@@ -42,7 +42,6 @@ class RavenResponse(object):
         except KeyError:
             raise MalformedResponseError("no WLS-Response")
 
-
         # The WLS sends an authentication response message as follows:  First a 'encoded response string' is formed by
         # concatenating the values of the response fields below, in the order shown, using '!' as a separator character.
         # If the characters '!'  or '%' appear in any
@@ -50,7 +49,7 @@ class RavenResponse(object):
         # before concatenation.
         # Parameters with no relevant value MUST be encoded as the empty string.
         rawtokens = response_str.split('!')
-        tokens = list(map(unquote, rawtokens)) # return a list for python3 compatiblity
+        tokens = list(map(unquote, rawtokens))  # return a list for python3 compatibility
 
         # ver: The version of the WLS protocol in use. May be the same as the 'ver' parameter
         # supplied in the request
@@ -194,8 +193,8 @@ class RavenResponse(object):
 
             # Check that the signature matches the data supplied. To check this, the WAA uses the public key identified
             # by 'kid'.
-            data = '!'.join(rawtokens[0:(12-versioni)])  # The data string that was signed in the WLS (everything from the
-                                                      # WLS-Response except 'kid' and 'sig'
+            data = '!'.join(rawtokens[0:(12-versioni)])
+            # The data string that was signed in the WLS (everything from the  WLS-Response except 'kid' and 'sig'
             try:
                 verify(cert, self.sig, data.encode(), 'sha1')
             except Exception:
