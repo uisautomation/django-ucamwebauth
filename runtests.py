@@ -8,6 +8,7 @@ settings.configure(
     DATABASES={'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'test.db', }},
     TIME_ZONE='Europe/London',
     USE_TZ=True,
+    SITE_ID=1,
     ROOT_URLCONF='ucamwebauth.urls',
     INSTALLED_APPS=(
         'django.contrib.auth',
