@@ -1,5 +1,4 @@
 import logging
-import os, sys
 from django.core.management import execute_from_command_line
 
 from django.conf import settings

@@ -1,4 +1,4 @@
-django
+django>=1.6
 PyOpenSSL==0.14
 requests
 django-jenkins
