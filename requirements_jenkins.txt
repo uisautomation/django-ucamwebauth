@@ -1,5 +1,5 @@
-django>=1.6
-PyOpenSSL==0.14
+django>=1.7
+PyOpenSSL>=0.15,<0.16
 requests
 django-jenkins
 coverage
