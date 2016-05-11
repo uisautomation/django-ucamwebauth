@@ -7,6 +7,10 @@ env:
   - DJANGO="django>=1.7,<1.8"
   - DJANGO="django>=1.8,<1.9"
   - DJANGO="django>=1.9,<1.10"
+matrix:
+  exclude:
+    - python: 3.5
+      env: DJANGO="django>=1.7,<1.8"
 install:
   - pip install $DJANGO
   - pip install "PyOpenSSL>=0.15,<0.16"
