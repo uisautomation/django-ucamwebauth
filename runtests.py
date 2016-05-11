@@ -1,7 +1,7 @@
 import logging
 from django.core.management import execute_from_command_line
-
 from django.conf import settings
+
 settings.configure(
     DEBUG=False,
     DATABASES={'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'test.db', }},
@@ -16,7 +16,8 @@ settings.configure(
         'django.contrib.sites',
         'django.contrib.messages',
         'django.contrib.staticfiles',
-        'ucamwebauth', ),
+        'ucamwebauth',
+    ),
     AUTHENTICATION_BACKENDS=('ucamwebauth.backends.RavenAuthBackend', ),
     MIDDLEWARE_CLASSES=(
         'django.contrib.sessions.middleware.SessionMiddleware',
@@ -52,7 +53,7 @@ LSxbGuFG9yfPFIqaSntlYMxKKB5ba/tIAMzyAOHxdEM5hi1DXRsOok3ElWjOw9oN
 wOq24EIbX5LquL9w+uvnfXw=
 -----END CERTIFICATE-----
 """},
-    TEMPLATES = [
+    TEMPLATES=[
         {
             'BACKEND': 'django.template.backends.django.DjangoTemplates',
             'DIRS': [
@@ -77,5 +78,4 @@ wOq24EIbX5LquL9w+uvnfXw=
 )
 
 logging.basicConfig()
-
 execute_from_command_line(['', 'test'])

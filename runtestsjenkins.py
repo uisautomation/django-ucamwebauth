@@ -2,7 +2,6 @@ import os, sys
 from django.core.management import execute_from_command_line
 from django.conf import settings
 
-
 settings.configure(
     DEBUG=False,
     DATABASES={'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'test.db', }},
@@ -89,6 +88,5 @@ wOq24EIbX5LquL9w+uvnfXw=
     PEP8_RCFILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'jenkins/pep8'),
     PYLINT_RCFILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'jenkins/pylint'),
 )
-
 
 execute_from_command_line(sys.argv)
