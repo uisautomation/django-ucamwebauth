@@ -53,6 +53,7 @@ LSxbGuFG9yfPFIqaSntlYMxKKB5ba/tIAMzyAOHxdEM5hi1DXRsOok3ElWjOw9oN
 wOq24EIbX5LquL9w+uvnfXw=
 -----END CERTIFICATE-----
 """},
+    UCAMWEBAUTH_TIMEOUT=60,
     TEMPLATES=[
         {
             'BACKEND': 'django.template.backends.django.DjangoTemplates',
