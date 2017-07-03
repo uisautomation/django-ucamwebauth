@@ -14,8 +14,7 @@ matrix:
       env: DJANGO="django>=1.7,<1.8"
 install:
   - pip install $DJANGO
-  - pip install "PyOpenSSL>=0.15,<0.16"
-  - pip install requests
+  - pip install -r requirements.txt
   - python setup.py -q install
 script: python runtests.py
 notifications:
