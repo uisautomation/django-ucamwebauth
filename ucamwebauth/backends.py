@@ -36,7 +36,7 @@ class RavenAuthBackend(RemoteUserBackend):
                                                           "access this site"))
             raise UserNotAuthorised("Authentication successful but you are not authorised to access this site")
 
-        if django.VERSION[0] <= 1 and django.VERSION[1] <= 8:
+        if django.VERSION[0] <= 1 and django.VERSION[1] <= 10:
             return super(RavenAuthBackend, self).authenticate(response.principal)
         else:
             return super(RavenAuthBackend, self).authenticate(response_req, response.principal)
