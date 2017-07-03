@@ -1,6 +1,12 @@
 django-ucamwebauth changelog
 =============================
 
+1.4.1 - 03/07/2017
+------------------
+
+- Raise TypeError if the request is not in the proper format for UcamWebAuth, so that django tries other authentication backends
+
+
 1.4 - 03/07/2017
 ------------------
 

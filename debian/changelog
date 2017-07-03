@@ -1,3 +1,9 @@
+django-ucamwebauth (1.4.1) unstable; urgency=low
+
+  * Raise TypeError if the request is not in the proper format for UcamWebAuth, so that django tries other authentication backends
+
+ -- Abraham Martin <amc203@cam.ac.uk>  Mon, 3 Jul 2017 16:55:14 +0100
+
 django-ucamwebauth (1.4) unstable; urgency=low
 
   * Dropped support for old versions of Python and Django and added support for new versions of them.

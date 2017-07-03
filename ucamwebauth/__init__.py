@@ -34,11 +34,11 @@ class RavenResponse(object):
         """
 
         if response_req is None:
-            raise MalformedResponseError("no request supplied")
+            raise TypeError("no request supplied")
         try:
             response_str = response_req.GET['WLS-Response']
         except KeyError:
-            raise MalformedResponseError("no WLS-Response")
+            raise TypeError("no WLS-Response")
 
         # The WLS sends an authentication response message as follows:  First a 'encoded response string' is formed by
         # concatenating the values of the response fields below, in the order shown, using '!' as a separator character.
