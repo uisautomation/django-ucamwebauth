@@ -1,6 +1,13 @@
 django-ucamwebauth changelog
 =============================
 
+1.4 - 03/07/2017
+------------------
+
+- Dropped support for old versions of Python and Django and added support for new versions of them.
+- Officially supported: django 1.8, 1.10, and 1.11. Python 2.7, 3.4, 3.5
+
+
 1.3 - 10/03/2015
 ------------------
 

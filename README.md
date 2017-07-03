@@ -1,5 +1,4 @@
-[![Build Status](https://travis-ci.org/abrahammartin/django-ucamwebauth.svg?branch=master)]
-(https://travis-ci.org/abrahammartin/django-ucamwebauth)
+[![Build Status](https://travis-ci.org/abrahammartin/django-ucamwebauth.svg?branch=master)](https://travis-ci.org/abrahammartin/django-ucamwebauth)
 
 # Introduction
 
