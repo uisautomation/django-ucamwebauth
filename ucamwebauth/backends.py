@@ -1,3 +1,4 @@
+import django
 import logging
 from django.contrib.auth.backends import RemoteUserBackend
 from ucamwebauth import RavenResponse
@@ -13,7 +14,7 @@ class RavenAuthBackend(RemoteUserBackend):
     'ucamwebauth.backends.RavenAuthBackend' to AUTHENTICATION_BACKENDS
     in your django settings.py."""
 
-    def authenticate(self, response_req=None):
+    def authenticate(self, response_req=None, **kwargs):
         """Checks a response from the Raven server and sees if it is valid.  If
         it is, returns the User with the same username as the Raven username.
         @return User object, or None if authentication failed"""
@@ -35,7 +36,10 @@ class RavenAuthBackend(RemoteUserBackend):
                                                           "access this site"))
             raise UserNotAuthorised("Authentication successful but you are not authorised to access this site")
 
-        return super(RavenAuthBackend, self).authenticate(response.principal)
+        if django.VERSION[0] <= 1 and django.VERSION[1] <= 8:
+            return super(RavenAuthBackend, self).authenticate(response.principal)
+        else:
+            return super(RavenAuthBackend, self).authenticate(response_req, response.principal)
 
     # Backwards compatibility: honour UCAMWEBAUTH_CREATE_USER.
     @property
