@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.http import HttpResponseServerError, HttpResponseForbidden
-from django.template import loader, RequestContext
+from django.template import RequestContext
+from django.template.loader import get_template
 from ucamwebauth import MalformedResponseError, InvalidResponseError, PublicKeyNotFoundError, UserNotAuthorised, \
     OtherStatusCode
 
@@ -14,10 +15,10 @@ class DefaultErrorBehaviour():
                 exception.__class__ == InvalidResponseError or \
                 exception.__class__ == OtherStatusCode or \
                 exception.__class__ == PublicKeyNotFoundError:
-            template = loader.get_template("ucamwebauth_500.html")
+            template = get_template("ucamwebauth_500.html")
             messages.error(request, str(exception))
-            return HttpResponseServerError(template.render(RequestContext(request)))
+            return HttpResponseServerError(template.render({}, request))
         elif exception.__class__ == UserNotAuthorised:
-            template = loader.get_template("ucamwebauth_403.html")
+            template = get_template("ucamwebauth_403.html")
             messages.error(request, str(exception))
-            return HttpResponseForbidden(template.render(RequestContext(request)))
+            return HttpResponseForbidden(template.render({}, request))
