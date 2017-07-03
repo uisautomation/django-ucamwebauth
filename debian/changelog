@@ -1,4 +1,11 @@
-django-ucamwebauth (1.3) unstable; urgency=low
+django-ucamwebauth (1.4) unstable; urgency=low
+
+  * Dropped support for old versions of Python and Django and added support for new versions of them.
+  * Officially supported: django 1.8, 1.10, and 1.11. Python 2.7, 3.4, 3.5
+
+ -- Abraham Martin <amc203@cam.ac.uk>  Mon, 3 Jul 2017 15:07:11 +0100
+
+ django-ucamwebauth (1.3) unstable; urgency=low
 
   [ Abraham Martin ]
   * Fixed a bug reported by Andy Batey that make the module crash when the next parameter doesn't appear in the URL.
