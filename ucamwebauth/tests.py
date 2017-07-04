@@ -193,7 +193,7 @@ class RavenTestCase(TestCase):
             self.client.get(reverse('raven_return'), {})
         self.assertEqual(str(excep.exception), "no WLS-Response")
         self.assertNotIn('_auth_user_id', self.client.session)
-        with self.assertRaises(TypeError) as excep:
+        with self.assertRaises(MalformedResponseError) as excep:
             RavenResponse()
         self.assertEqual(str(excep.exception), "no request supplied")
         self.assertNotIn('_auth_user_id', self.client.session)

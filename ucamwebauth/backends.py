@@ -14,7 +14,7 @@ class RavenAuthBackend(RemoteUserBackend):
     'ucamwebauth.backends.RavenAuthBackend' to AUTHENTICATION_BACKENDS
     in your django settings.py."""
 
-    def authenticate(self, response_req=None, **kwargs):
+    def authenticate(self, response_req=None, remote_user=None):
         """Checks a response from the Raven server and sees if it is valid.  If
         it is, returns the User with the same username as the Raven username.
         @return User object, or None if authentication failed"""

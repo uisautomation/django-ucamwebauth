@@ -1,6 +1,12 @@
 django-ucamwebauth changelog
 =============================
 
+1.4.2 - 04/07/2017
+------------------
+
+- Modify authenticate signature to make UCamWebAuth compatible with other authentication backends.
+
+
 1.4.1 - 03/07/2017
 ------------------
 

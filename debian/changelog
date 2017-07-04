@@ -1,4 +1,10 @@
-django-ucamwebauth (1.4.1) unstable; urgency=low
+django-ucamwebauth (1.4.2) unstable; urgency=high
+
+  * Modify authenticate signature to make UCamWebAuth compatible with other authentication backends.
+
+ -- Abraham Martin <amc203@cam.ac.uk>  Mon, 4 Jul 2017 8:55:08 +0100
+
+ django-ucamwebauth (1.4.1) unstable; urgency=low
 
   * Raise TypeError if the request is not in the proper format for UcamWebAuth, so that django tries other authentication backends
 
