@@ -3,6 +3,7 @@ import logging
 from django.contrib.auth.backends import RemoteUserBackend
 from ucamwebauth import RavenResponse
 from ucamwebauth.exceptions import UserNotAuthorised, OtherStatusCode
+from ucamwebauth.models import UserProfile
 from ucamwebauth.utils import setting
 
 logger = logging.getLogger(__name__)
@@ -37,9 +38,18 @@ class RavenAuthBackend(RemoteUserBackend):
             raise UserNotAuthorised("Authentication successful but you are not authorised to access this site")
 
         if django.VERSION[0] <= 1 and django.VERSION[1] <= 10:
-            return super(RavenAuthBackend, self).authenticate(response.principal)
+            user = super(RavenAuthBackend, self).authenticate(response.principal)
         else:
-            return super(RavenAuthBackend, self).authenticate(response_req, response.principal)
+            user = super(RavenAuthBackend, self).authenticate(response_req, response.principal)
+
+        # creates (if necessary) the UserProfile model and update the raven_for_life property from the RavenResponse
+        profile = UserProfile.objects.get_or_create(user=user)[0]
+        raven_for_life = 'current' not in response.ptags
+        if profile.raven_for_life != raven_for_life:
+            profile.raven_for_life = raven_for_life
+            profile.save()
+
+        return user
 
     # Backwards compatibility: honour UCAMWEBAUTH_CREATE_USER.
     @property
