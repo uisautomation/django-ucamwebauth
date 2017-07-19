@@ -1,6 +1,9 @@
 from base64 import b64encode
 from datetime import datetime, timedelta
 from django.conf import settings
+
+from ucamwebauth.models import UserProfile
+
 try:
     from urlparse import urlparse, parse_qs
     from urllib import unquote, urlencode
@@ -360,6 +363,8 @@ class RavenTestCase(TestCase):
             self.client.get(reverse('raven_return'),
                             {'WLS-Response': self.get_wls_response(raven_user=RAVEN_FORLIVE_USER)})
             self.assertIn('_auth_user_id', self.client.session)
+            profile = UserProfile.objects.get(user__username=RAVEN_FORLIVE_USER)
+            self.assertTrue(profile.raven_for_life)
 
     def test_user_cancel_wls_auth(self):
         with self.assertRaises(OtherStatusCode) as excep:
@@ -421,3 +426,13 @@ class RavenTestCase(TestCase):
                     found = True
                 exc_traceback = exc_traceback.tb_next
             self.assertTrue(found)
+
+    def test_user_becomes_raven_for_file_user(self):
+        with self.settings(UCAMWEBAUTH_NOT_CURRENT=True):
+            self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response()})
+            profile = UserProfile.objects.get(user__username='test0001')
+            self.assertFalse(profile.raven_for_life)
+            # now leaves the university
+            self.client.get(reverse('raven_return'), {'WLS-Response': create_wls_response(raven_ptags='')})
+            profile = UserProfile.objects.get(user__username='test0001')
+            self.assertTrue(profile.raven_for_life)
