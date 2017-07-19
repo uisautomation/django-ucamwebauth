@@ -43,11 +43,12 @@ class RavenAuthBackend(RemoteUserBackend):
             user = super(RavenAuthBackend, self).authenticate(response_req, response.principal)
 
         # creates (if necessary) the UserProfile model and update the raven_for_life property from the RavenResponse
-        profile = UserProfile.objects.get_or_create(user=user)[0]
-        raven_for_life = 'current' not in response.ptags
-        if profile.raven_for_life != raven_for_life:
-            profile.raven_for_life = raven_for_life
-            profile.save()
+        if user:
+            profile = UserProfile.objects.get_or_create(user=user)[0]
+            raven_for_life = 'current' not in response.ptags
+            if profile.raven_for_life != raven_for_life:
+                profile.raven_for_life = raven_for_life
+                profile.save()
 
         return user
 
