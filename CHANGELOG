@@ -1,6 +1,12 @@
 django-ucamwebauth changelog
 =============================
 
+1.4.3 - 14/07/2017
+------------------
+
+- New UserProfile model to enrich the User model. The only field raven_for_life indicates whether or not the user has left the university.
+
+
 1.4.2 - 04/07/2017
 ------------------
 
