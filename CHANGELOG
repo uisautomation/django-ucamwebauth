@@ -1,6 +1,12 @@
 django-ucamwebauth changelog
 =============================
 
+1.4.4 - 02/08/2017
+------------------
+
+- Added string representation to UserProfile.
+
+
 1.4.3 - 14/07/2017
 ------------------
 
