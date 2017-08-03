@@ -1,5 +1,5 @@
 Name: django-ucamwebauth
-Version: 1.4.2
+Version: 1.4.4
 Release: 1
 Summary: University of Cambridge Web Authentication module for Django
 Source: %{name}-%{version}.tar.gz
