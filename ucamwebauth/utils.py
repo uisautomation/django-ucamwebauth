@@ -8,7 +8,10 @@ except ImportError:
     from urllib.parse import parse_qs, unquote
 from django.conf import settings
 from django.http import HttpResponseRedirect
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from ucamwebauth.exceptions import MalformedResponseError
 
 
