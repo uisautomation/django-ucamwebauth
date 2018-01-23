@@ -14,7 +14,10 @@ from OpenSSL.crypto import load_privatekey, FILETYPE_PEM, sign
 import requests
 from django.test import TestCase, RequestFactory
 from django.test.client import Client
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from ucamwebauth import InvalidResponseError, MalformedResponseError, UserNotAuthorised, RavenResponse, \
     PublicKeyNotFoundError
