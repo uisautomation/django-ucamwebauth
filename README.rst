@@ -1,5 +1,5 @@
 [|Build Status|\ ]
-(https://travis-ci.org/abrahammartin/django-ucamwebauth)
+(https://travis-ci.org/uisautomation/django-ucamwebauth)
 
 Introduction
 ============
