@@ -1,6 +1,18 @@
 django-ucamwebauth changelog
 =============================
 
+1.4.6 - 23/01/2018
+------------------
+
+- Deprecated compatibility with django 1.10 (now unsupported)
+
+
+1.4.5 - 13/12/2017
+------------------
+
+- Added compatibility with django 2.0
+
+
 1.4.4 - 02/08/2017
 ------------------
 
