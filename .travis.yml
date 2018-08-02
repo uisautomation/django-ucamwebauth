@@ -8,13 +8,17 @@ env:
   - DJANGO="django>=1.8,<1.9"
   - DJANGO="django>=1.11,<1.12"
   - DJANGO="django>=2.0,<2.1"
+  - DJANGO="django>=2.1,<2.2"
 matrix:
   exclude:
     - python: 3.6
       env: DJANGO="django>=1.8,<1.9"
-  exclude:
+    - python: 3.4
+      env: DJANGO="django>=2.1,<2.2"
     - python: 2.7
       env: DJANGO="django>=2.0,<2.1"
+    - python: 2.7
+      env: DJANGO="django>=2.1,<2.2"
 install:
   - pip install $DJANGO
   - pip install -r requirements.txt

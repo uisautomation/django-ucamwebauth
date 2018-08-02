@@ -16,7 +16,7 @@ def raven_return(request):
         raise MalformedResponseError("no WLS-Response")
 
     # See if this is a valid token
-    user = authenticate(response_req=request)
+    user = authenticate(request=request)
 
     if user is None:
         return redirect(setting('UCAMWEBAUTH_LOGOUT_REDIRECT', default='/'))
