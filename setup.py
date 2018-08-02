@@ -10,7 +10,7 @@ setup(
     url='https://github.com/uisautomation/django-ucamwebauth.git',
     # When changing this version number, remember to update
     # django-ucamwebauth.spec and debian/changelog.
-    version='1.4.7',
+    version='1.4.8',
     license='MIT',
     author='Information Systems Group, University Information Services, University of Cambridge',
     author_email='raven-support@cam.ac.uk',
