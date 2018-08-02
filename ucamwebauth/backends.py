@@ -15,14 +15,14 @@ class RavenAuthBackend(RemoteUserBackend):
     'ucamwebauth.backends.RavenAuthBackend' to AUTHENTICATION_BACKENDS
     in your django settings.py."""
 
-    def authenticate(self, response_req=None, remote_user=None):
+    def authenticate(self, request=None, remote_user=None):
         """Checks a response from the Raven server and sees if it is valid.  If
         it is, returns the User with the same username as the Raven username.
         @return User object, or None if authentication failed"""
 
         # Check that everything is correct, and return
         try:
-            response = RavenResponse(response_req)
+            response = RavenResponse(request)
         except Exception as e:
             logger.error("%s: %s" % (type(e).__name__, e))
             raise
@@ -40,7 +40,7 @@ class RavenAuthBackend(RemoteUserBackend):
         if django.VERSION[0] <= 1 and django.VERSION[1] <= 10:
             user = super(RavenAuthBackend, self).authenticate(response.principal)
         else:
-            user = super(RavenAuthBackend, self).authenticate(response_req, response.principal)
+            user = super(RavenAuthBackend, self).authenticate(request, response.principal)
 
         # creates (if necessary) the UserProfile model and update the raven_for_life property from the RavenResponse
         if user:
