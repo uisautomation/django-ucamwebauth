@@ -1,4 +1,4 @@
-> **This repository has moved to https://gitlab.developers.cam.ac.uk/uis/devops/django/ucamwebauth/import**
+> **This repository has moved to https://gitlab.developers.cam.ac.uk/uis/devops/django/ucamwebauth**
 
 [![Build Status](https://travis-ci.org/uisautomation/django-ucamwebauth.svg?branch=master)](https://travis-ci.org/uisautomation/django-ucamwebauth)
 
